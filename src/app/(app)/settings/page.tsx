@@ -1,8 +1,15 @@
-export default function SettingsPage() {
-  return (
-    <div>
-      <h1 className="text-2xl font-bold">Settings</h1>
-      <p className="mt-2 text-muted-foreground">Your settings will appear here.</p>
-    </div>
-  );
+import { createClient } from "@/lib/supabase/server";
+import { SettingsForm } from "./settings-form";
+
+export { SettingsForm };
+
+export default async function SettingsPage() {
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .from("company_settings")
+    .select("*")
+    .single();
+
+  return <SettingsForm data={data!} />;
 }
