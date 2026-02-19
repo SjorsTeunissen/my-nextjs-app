@@ -1,8 +1,13 @@
-export default function InvoicesPage() {
-  return (
-    <div>
-      <h1 className="text-2xl font-bold">Invoices</h1>
-      <p className="mt-2 text-muted-foreground">Your invoices will appear here.</p>
-    </div>
-  );
+import { createClient } from "@/lib/supabase/server";
+import { InvoiceTable } from "@/components/invoice-table";
+
+export default async function InvoicesPage() {
+  const supabase = await createClient();
+
+  const { data: invoices } = await supabase
+    .from("invoices")
+    .select("*")
+    .order("issue_date", { ascending: false });
+
+  return <InvoiceTable invoices={invoices ?? []} />;
 }
