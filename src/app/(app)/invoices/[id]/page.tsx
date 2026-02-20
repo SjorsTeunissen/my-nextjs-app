@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { InvoiceForm } from "@/components/invoice-form";
+import { PdfDownloadButtonWrapper } from "@/components/pdf-download-button-wrapper";
 
 export default async function EditInvoicePage({
   params,
@@ -26,19 +27,30 @@ export default async function EditInvoicePage({
     .eq("invoice_id", id)
     .order("sort_order", { ascending: true });
 
-  const { data: settings } = await supabase
+  const { data: companySettings } = await supabase
     .from("company_settings")
-    .select("default_tax_rate")
+    .select("*")
     .single();
 
-  const defaultTaxRate = settings?.default_tax_rate ?? 21;
+  const defaultTaxRate = companySettings?.default_tax_rate ?? 21;
 
   return (
-    <InvoiceForm
-      invoice={invoice}
-      lineItems={lineItems ?? []}
-      defaultInvoiceNumber={invoice.invoice_number}
-      defaultTaxRate={defaultTaxRate}
-    />
+    <div className="space-y-6">
+      {companySettings && (
+        <div className="flex justify-end">
+          <PdfDownloadButtonWrapper
+            invoice={invoice}
+            lineItems={lineItems ?? []}
+            companySettings={companySettings}
+          />
+        </div>
+      )}
+      <InvoiceForm
+        invoice={invoice}
+        lineItems={lineItems ?? []}
+        defaultInvoiceNumber={invoice.invoice_number}
+        defaultTaxRate={defaultTaxRate}
+      />
+    </div>
   );
 }
