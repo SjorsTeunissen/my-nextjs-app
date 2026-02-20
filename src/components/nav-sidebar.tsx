@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileText, Settings, LogOut } from "lucide-react";
+import { FileText, Settings, LogOut, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "next-themes";
 import { signOut } from "@/app/login/actions";
+import { saveThemePreference } from "@/app/(app)/settings/theme-actions";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -14,6 +16,7 @@ const navItems = [
 
 export function NavSidebar({ userEmail }: { userEmail: string }) {
   const pathname = usePathname();
+  const { theme, setTheme } = useTheme();
 
   return (
     <aside className="flex h-screen w-64 flex-col border-r bg-sidebar text-sidebar-foreground">
@@ -40,6 +43,24 @@ export function NavSidebar({ userEmail }: { userEmail: string }) {
         <p className="mb-2 truncate text-xs text-muted-foreground">
           {userEmail}
         </p>
+        <Button
+          data-testid="theme-toggle"
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start"
+          onClick={() => {
+            const newTheme = theme === "dark" ? "light" : "dark";
+            setTheme(newTheme);
+            saveThemePreference(newTheme);
+          }}
+        >
+          {theme === "dark" ? (
+            <Moon className="size-4" />
+          ) : (
+            <Sun className="size-4" />
+          )}
+          {theme === "dark" ? "Dark" : "Light"}
+        </Button>
         <form action={signOut}>
           <Button variant="ghost" size="sm" className="w-full justify-start">
             <LogOut className="size-4" />
