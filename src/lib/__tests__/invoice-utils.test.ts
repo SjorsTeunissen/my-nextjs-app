@@ -44,6 +44,14 @@ describe("calculateTotals", () => {
     );
     expect(result).toEqual({ subtotal: 100, taxAmount: 0, total: 100 });
   });
+
+  it("calculates with zero tax rate and multiple quantity", () => {
+    const result = calculateTotals(
+      [{ description: "Item", quantity: 3, unit_price: 100 }],
+      0
+    );
+    expect(result).toEqual({ subtotal: 300, taxAmount: 0, total: 300 });
+  });
 });
 
 describe("generateInvoiceNumber", () => {
@@ -61,5 +69,9 @@ describe("generateInvoiceNumber", () => {
 
   it("returns INV-002 when last number is INV-001", () => {
     expect(generateInvoiceNumber("INV-001")).toBe("INV-002");
+  });
+
+  it("returns INV-1000 when last number is INV-999", () => {
+    expect(generateInvoiceNumber("INV-999")).toBe("INV-1000");
   });
 });
