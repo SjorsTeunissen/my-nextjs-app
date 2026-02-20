@@ -26,4 +26,38 @@ describe("database types", () => {
     type Row = Database["public"]["Tables"]["invoice_line_items"]["Row"];
     expectTypeOf<Row["invoice_id"]>().toBeNullable();
   });
+
+  it("includes user_preferences table", () => {
+    expectTypeOf<Database["public"]["Tables"]>().toHaveProperty("user_preferences");
+  });
+
+  it("user_preferences Row has user_id as string", () => {
+    type Row = Database["public"]["Tables"]["user_preferences"]["Row"];
+    expectTypeOf<Row["user_id"]>().toBeString();
+  });
+
+  it("user_preferences Row has theme as string", () => {
+    type Row = Database["public"]["Tables"]["user_preferences"]["Row"];
+    expectTypeOf<Row["theme"]>().toBeString();
+  });
+
+  it("user_preferences Row has created_at as nullable", () => {
+    type Row = Database["public"]["Tables"]["user_preferences"]["Row"];
+    expectTypeOf<Row["created_at"]>().toBeNullable();
+  });
+
+  it("user_preferences Row has updated_at as nullable", () => {
+    type Row = Database["public"]["Tables"]["user_preferences"]["Row"];
+    expectTypeOf<Row["updated_at"]>().toBeNullable();
+  });
+
+  it("user_preferences Insert has theme as optional", () => {
+    type Insert = Database["public"]["Tables"]["user_preferences"]["Insert"];
+    expectTypeOf<{ theme?: string | null }>().toMatchTypeOf<Pick<Insert, "theme">>();
+  });
+
+  it("user_preferences Insert requires user_id", () => {
+    type Insert = Database["public"]["Tables"]["user_preferences"]["Insert"];
+    expectTypeOf<Insert["user_id"]>().toBeString();
+  });
 });
