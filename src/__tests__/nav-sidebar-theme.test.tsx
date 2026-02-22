@@ -149,4 +149,51 @@ describe("NavSidebar collapse", () => {
     expect(getByText("Invoices")).toBeInTheDocument();
     expect(getByText("Settings")).toBeInTheDocument();
   });
+
+  it("shows nav labels on hover when collapsed", () => {
+    const { getByTestId, queryByText, getByText } = render(
+      <NavSidebar userEmail="user@test.com" />
+    );
+    // Collapse
+    fireEvent.click(getByTestId("sidebar-collapse-toggle"));
+    expect(queryByText("Invoices")).not.toBeInTheDocument();
+    // Hover over sidebar
+    const sidebar = getByTestId("nav-sidebar");
+    fireEvent.mouseEnter(sidebar);
+    expect(getByText("Invoices")).toBeInTheDocument();
+    expect(getByText("Settings")).toBeInTheDocument();
+  });
+
+  it("hides nav labels when mouse leaves collapsed sidebar", () => {
+    const { getByTestId, queryByText, getByText } = render(
+      <NavSidebar userEmail="user@test.com" />
+    );
+    // Collapse
+    fireEvent.click(getByTestId("sidebar-collapse-toggle"));
+    // Hover then leave
+    const sidebar = getByTestId("nav-sidebar");
+    fireEvent.mouseEnter(sidebar);
+    expect(getByText("Invoices")).toBeInTheDocument();
+    fireEvent.mouseLeave(sidebar);
+    expect(queryByText("Invoices")).not.toBeInTheDocument();
+  });
+
+  it("does not change collapsed state on hover (hover is transient)", () => {
+    const { getByTestId, queryByText } = render(
+      <NavSidebar userEmail="user@test.com" />
+    );
+    // Collapse
+    fireEvent.click(getByTestId("sidebar-collapse-toggle"));
+    // Hover and leave
+    const sidebar = getByTestId("nav-sidebar");
+    fireEvent.mouseEnter(sidebar);
+    fireEvent.mouseLeave(sidebar);
+    // Still collapsed (labels hidden)
+    expect(queryByText("Invoices")).not.toBeInTheDocument();
+    // Toggle still says "Expand sidebar"
+    expect(getByTestId("sidebar-collapse-toggle")).toHaveAttribute(
+      "aria-label",
+      "Expand sidebar"
+    );
+  });
 });
