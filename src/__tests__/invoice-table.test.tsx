@@ -5,6 +5,7 @@ import { render, cleanup, fireEvent } from "@testing-library/react";
 import type { Database } from "@/lib/types/database";
 
 const mockPush = vi.fn();
+const mockRefresh = vi.fn();
 
 // Mock next/link
 vi.mock("next/link", () => ({
@@ -25,7 +26,12 @@ vi.mock("next/link", () => ({
 
 // Mock next/navigation
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: mockPush }),
+  useRouter: () => ({ push: mockPush, refresh: mockRefresh }),
+}));
+
+// Mock the quick update action
+vi.mock("@/app/(app)/invoices/actions", () => ({
+  quickUpdateInvoice: vi.fn().mockResolvedValue({ success: true }),
 }));
 
 import { InvoiceTable } from "@/components/invoice-table";
@@ -67,31 +73,25 @@ describe("InvoiceTable", () => {
     vi.clearAllMocks();
   });
 
-  it("renders empty state when no invoices provided", () => {
+  it("renders empty state with icon and descriptive text when no invoices", () => {
     const { getByText, container } = render(
       <InvoiceTable invoices={[]} />
     );
 
     expect(
-      getByText("No invoices yet. Create your first invoice.")
+      getByText("No invoices yet. Create your first invoice to get started.")
     ).toBeInTheDocument();
+
+    // Should render FileText icon (svg)
+    const svg = container.querySelector("svg");
+    expect(svg).toBeInTheDocument();
 
     // Table should not be rendered
     const table = container.querySelector("table");
     expect(table).not.toBeInTheDocument();
   });
 
-  it("renders New Invoice button linking to /invoices/new", () => {
-    const { container } = render(<InvoiceTable invoices={[]} />);
-
-    const newInvoiceLink = container.querySelector(
-      'a[href="/invoices/new"]'
-    );
-    expect(newInvoiceLink).toBeInTheDocument();
-    expect(newInvoiceLink?.textContent).toContain("New Invoice");
-  });
-
-  it("renders table with 3 rows and 5 column headers", () => {
+  it("renders table with 3 rows and 5 column headers plus actions column", () => {
     const invoices = [
       createInvoice({ id: "inv-1", invoice_number: "INV-001", client_name: "Acme Corp" }),
       createInvoice({ id: "inv-2", invoice_number: "INV-002", client_name: "Beta Inc" }),
@@ -102,7 +102,7 @@ describe("InvoiceTable", () => {
       <InvoiceTable invoices={invoices} />
     );
 
-    // Check 5 column headers
+    // Check 5 visible column headers
     expect(getByText("Invoice #")).toBeInTheDocument();
     expect(getByText("Client Name")).toBeInTheDocument();
     expect(getByText("Issue Date")).toBeInTheDocument();
@@ -121,7 +121,6 @@ describe("InvoiceTable", () => {
       />
     );
 
-    // formatCurrency with nl-NL locale produces "€ 1.500,00"
     expect(getByText("€ 1.500,00")).toBeInTheDocument();
   });
 
@@ -139,16 +138,24 @@ describe("InvoiceTable", () => {
     expect(mockPush).toHaveBeenCalledWith("/invoices/inv-abc-123");
   });
 
-  it("renders New Invoice button with correct href when invoices exist", () => {
-    const { container } = render(
+  it("renders hover action buttons for quick-edit and view", () => {
+    const { getByLabelText } = render(
       <InvoiceTable invoices={[createInvoice()]} />
     );
 
-    const newInvoiceLink = container.querySelector(
-      'a[href="/invoices/new"]'
+    expect(getByLabelText("Quick edit")).toBeInTheDocument();
+    expect(getByLabelText("View invoice")).toBeInTheDocument();
+  });
+
+  it("view invoice link points to correct detail page", () => {
+    const { getByLabelText } = render(
+      <InvoiceTable
+        invoices={[createInvoice({ id: "inv-view-test" })]}
+      />
     );
-    expect(newInvoiceLink).toBeInTheDocument();
-    expect(newInvoiceLink?.textContent).toContain("New Invoice");
+
+    const viewLink = getByLabelText("View invoice").closest("a");
+    expect(viewLink).toHaveAttribute("href", "/invoices/inv-view-test");
   });
 
   it("formats dates with nl-NL locale", () => {
@@ -163,8 +170,16 @@ describe("InvoiceTable", () => {
       />
     );
 
-    // nl-NL locale formats dates as "15-1-2026"
     expect(getByText("15-1-2026")).toBeInTheDocument();
     expect(getByText("15-2-2026")).toBeInTheDocument();
+  });
+
+  it("rows have group/row class for hover action visibility", () => {
+    const { container } = render(
+      <InvoiceTable invoices={[createInvoice()]} />
+    );
+
+    const row = container.querySelector("tbody tr");
+    expect(row?.className).toContain("group/row");
   });
 });
