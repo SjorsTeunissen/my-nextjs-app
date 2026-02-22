@@ -4,6 +4,7 @@ import { NavSidebar } from "@/components/nav-sidebar";
 import { MobileSidebar } from "@/components/mobile-sidebar";
 import { ThemeSync } from "@/components/theme-sync";
 import { CommandPalette } from "@/components/command-palette";
+import { KeyboardShortcutIndicator } from "@/components/keyboard-shortcut-indicator";
 import { getThemePreference } from "@/app/(app)/settings/theme-actions";
 
 export default async function AppLayout({
@@ -26,6 +27,7 @@ export default async function AppLayout({
     <div className="flex h-dvh">
       <ThemeSync initialTheme={themePreference} />
       <CommandPalette />
+      <KeyboardShortcutIndicator />
       <NavSidebar userEmail={user.email ?? ""} />
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="flex h-12 items-center border-b px-4 md:hidden">
