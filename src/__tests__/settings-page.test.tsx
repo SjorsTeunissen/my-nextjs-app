@@ -144,15 +144,24 @@ describe("SettingsForm", () => {
       <SettingsForm data={createSettings()} />
     );
 
-    const cardTitles = container.querySelectorAll('[data-slot="card-title"]');
-    const titleTexts = Array.from(cardTitles).map((el) => el.textContent);
+    const sectionHeadings = container.querySelectorAll("h2");
+    const headingTexts = Array.from(sectionHeadings).map((el) => el.textContent);
 
-    expect(titleTexts).toContain("Company Information");
-    expect(titleTexts).toContain("Address");
-    expect(titleTexts).toContain("Contact");
-    expect(titleTexts).toContain("Banking");
-    expect(titleTexts).toContain("Tax");
-    expect(titleTexts).toContain("Logo");
+    expect(headingTexts).toContain("Company Information");
+    expect(headingTexts).toContain("Address");
+    expect(headingTexts).toContain("Contact");
+    expect(headingTexts).toContain("Banking");
+    expect(headingTexts).toContain("Tax");
+    expect(headingTexts).toContain("Logo");
+  });
+
+  it("renders separators between sections", () => {
+    const { container } = render(
+      <SettingsForm data={createSettings()} />
+    );
+
+    const separators = container.querySelectorAll('[data-slot="separator"]');
+    expect(separators.length).toBe(6);
   });
 
   it("validates file type on logo upload input", () => {
