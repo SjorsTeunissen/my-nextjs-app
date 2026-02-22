@@ -62,103 +62,109 @@ export function LineItemsEditor({
   }
 
   return (
-    <div className="space-y-4">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Description</TableHead>
-            <TableHead className="w-28">Quantity</TableHead>
-            <TableHead className="w-32">Unit Price</TableHead>
-            <TableHead className="w-32 text-right">Amount</TableHead>
-            <TableHead className="w-12" />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {items.map((item) => (
-            <TableRow key={item.id}>
-              <TableCell>
-                <Input
-                  aria-label="Description"
-                  value={item.description}
-                  onChange={(e) =>
-                    updateRow(item.id, "description", e.target.value)
-                  }
-                />
-              </TableCell>
-              <TableCell>
-                <Input
-                  aria-label="Quantity"
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={item.quantity}
-                  onChange={(e) =>
-                    updateRow(item.id, "quantity", e.target.value)
-                  }
-                />
-              </TableCell>
-              <TableCell>
-                <Input
-                  aria-label="Unit Price"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={item.unit_price}
-                  onChange={(e) =>
-                    updateRow(item.id, "unit_price", e.target.value)
-                  }
-                />
-              </TableCell>
-              <TableCell className="text-right">
-                {formatCurrency(item.quantity * item.unit_price)}
-              </TableCell>
-              <TableCell>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-xs"
-                  onClick={() => removeRow(item.id)}
-                  aria-label="Remove line item"
-                >
-                  <Trash2 className="size-4" />
-                </Button>
-              </TableCell>
+    <div className="space-y-3">
+      <div className="rounded-md border border-border">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="h-8 text-xs">Description</TableHead>
+              <TableHead className="h-8 w-28 text-xs">Quantity</TableHead>
+              <TableHead className="h-8 w-32 text-xs">Unit Price</TableHead>
+              <TableHead className="h-8 w-32 text-right text-xs">Amount</TableHead>
+              <TableHead className="h-8 w-10" />
             </TableRow>
-          ))}
-        </TableBody>
-        <TableFooter>
-          <TableRow>
-            <TableCell colSpan={3} className="text-right font-medium">
-              Subtotal
-            </TableCell>
-            <TableCell className="text-right" data-testid="subtotal">
-              {formatCurrency(totals.subtotal)}
-            </TableCell>
-            <TableCell />
-          </TableRow>
-          <TableRow>
-            <TableCell colSpan={3} className="text-right font-medium">
-              Tax ({taxRate}%)
-            </TableCell>
-            <TableCell className="text-right" data-testid="tax-amount">
-              {formatCurrency(totals.taxAmount)}
-            </TableCell>
-            <TableCell />
-          </TableRow>
-          <TableRow>
-            <TableCell colSpan={3} className="text-right font-bold">
-              Total
-            </TableCell>
-            <TableCell
-              className="text-right font-bold"
-              data-testid="total"
-            >
-              {formatCurrency(totals.total)}
-            </TableCell>
-            <TableCell />
-          </TableRow>
-        </TableFooter>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {items.map((item) => (
+              <TableRow key={item.id} className="group border-border hover:bg-muted/50">
+                <TableCell className="py-1.5">
+                  <Input
+                    aria-label="Description"
+                    value={item.description}
+                    onChange={(e) =>
+                      updateRow(item.id, "description", e.target.value)
+                    }
+                    className="h-8"
+                  />
+                </TableCell>
+                <TableCell className="py-1.5">
+                  <Input
+                    aria-label="Quantity"
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={item.quantity}
+                    onChange={(e) =>
+                      updateRow(item.id, "quantity", e.target.value)
+                    }
+                    className="h-8"
+                  />
+                </TableCell>
+                <TableCell className="py-1.5">
+                  <Input
+                    aria-label="Unit Price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={item.unit_price}
+                    onChange={(e) =>
+                      updateRow(item.id, "unit_price", e.target.value)
+                    }
+                    className="h-8"
+                  />
+                </TableCell>
+                <TableCell className="py-1.5 text-right text-sm">
+                  {formatCurrency(item.quantity * item.unit_price)}
+                </TableCell>
+                <TableCell className="py-1.5">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-xs"
+                    onClick={() => removeRow(item.id)}
+                    aria-label="Remove line item"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Trash2 className="size-3.5" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+          <TableFooter>
+            <TableRow className="border-border">
+              <TableCell colSpan={3} className="py-1.5 text-right text-sm font-medium">
+                Subtotal
+              </TableCell>
+              <TableCell className="py-1.5 text-right text-sm" data-testid="subtotal">
+                {formatCurrency(totals.subtotal)}
+              </TableCell>
+              <TableCell className="py-1.5" />
+            </TableRow>
+            <TableRow className="border-border">
+              <TableCell colSpan={3} className="py-1.5 text-right text-sm font-medium">
+                Tax ({taxRate}%)
+              </TableCell>
+              <TableCell className="py-1.5 text-right text-sm" data-testid="tax-amount">
+                {formatCurrency(totals.taxAmount)}
+              </TableCell>
+              <TableCell className="py-1.5" />
+            </TableRow>
+            <TableRow className="border-border">
+              <TableCell colSpan={3} className="py-1.5 text-right text-sm font-bold">
+                Total
+              </TableCell>
+              <TableCell
+                className="py-1.5 text-right text-sm font-bold"
+                data-testid="total"
+              >
+                {formatCurrency(totals.total)}
+              </TableCell>
+              <TableCell className="py-1.5" />
+            </TableRow>
+          </TableFooter>
+        </Table>
+      </div>
       <Button type="button" variant="outline" size="sm" onClick={addRow}>
         <Plus className="size-4" />
         Add Line Item

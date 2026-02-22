@@ -4,18 +4,14 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import {
   LineItemsEditor,
   type LineItemRow,
 } from "@/components/line-items-editor";
 import { createInvoice, updateInvoice } from "@/app/(app)/invoices/actions";
 import type { Database } from "@/lib/types/database";
+import { PageHeader } from "@/components/page-header";
 
 type Invoice = Database["public"]["Tables"]["invoices"]["Row"];
 type LineItemDb = Database["public"]["Tables"]["invoice_line_items"]["Row"];
@@ -130,15 +126,15 @@ export function InvoiceForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">
-          {isEditing ? "Edit Invoice" : "New Invoice"}
-        </h1>
-        <Button type="submit" disabled={saving}>
-          {saving ? "Saving..." : "Save"}
-        </Button>
-      </div>
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <PageHeader
+        title={isEditing ? "Edit Invoice" : "New Invoice"}
+        actions={
+          <Button type="submit" disabled={saving}>
+            {saving ? "Saving..." : "Save"}
+          </Button>
+        }
+      />
 
       {error && (
         <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
@@ -147,59 +143,55 @@ export function InvoiceForm({
       )}
 
       {/* Invoice Details */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Invoice Details</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="space-y-2">
-              <Label htmlFor="invoice_number">Invoice Number</Label>
-              <Input
-                id="invoice_number"
-                value={invoiceNumber}
-                onChange={(e) => setInvoiceNumber(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="issue_date">Issue Date</Label>
-              <Input
-                id="issue_date"
-                type="date"
-                value={issueDate}
-                onChange={(e) => setIssueDate(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="due_date">Due Date</Label>
-              <Input
-                id="due_date"
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="tax_rate">Tax Rate (%)</Label>
-              <Input
-                id="tax_rate"
-                type="number"
-                step="0.01"
-                value={taxRate}
-                onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
-              />
-            </div>
+      <section>
+        <h2 className="text-sm font-medium text-muted-foreground">Invoice Details</h2>
+        <Separator className="mt-2 mb-3" />
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="invoice_number">Invoice Number</Label>
+            <Input
+              id="invoice_number"
+              value={invoiceNumber}
+              onChange={(e) => setInvoiceNumber(e.target.value)}
+            />
           </div>
-        </CardContent>
-      </Card>
+          <div className="space-y-1.5">
+            <Label htmlFor="issue_date">Issue Date</Label>
+            <Input
+              id="issue_date"
+              type="date"
+              value={issueDate}
+              onChange={(e) => setIssueDate(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="due_date">Due Date</Label>
+            <Input
+              id="due_date"
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="tax_rate">Tax Rate (%)</Label>
+            <Input
+              id="tax_rate"
+              type="number"
+              step="0.01"
+              value={taxRate}
+              onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
+            />
+          </div>
+        </div>
+      </section>
 
       {/* Client Details */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Client Details</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
+      <section>
+        <h2 className="text-sm font-medium text-muted-foreground">Client Details</h2>
+        <Separator className="mt-2 mb-3" />
+        <div className="space-y-3">
+          <div className="space-y-1.5">
             <Label htmlFor="client_name">Client Name</Label>
             <Input
               id="client_name"
@@ -207,7 +199,7 @@ export function InvoiceForm({
               onChange={(e) => setClientName(e.target.value)}
             />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <Label htmlFor="client_address">Address</Label>
             <Input
               id="client_address"
@@ -215,8 +207,8 @@ export function InvoiceForm({
               onChange={(e) => setClientAddress(e.target.value)}
             />
           </div>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="space-y-2">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="space-y-1.5">
               <Label htmlFor="client_city">City</Label>
               <Input
                 id="client_city"
@@ -224,7 +216,7 @@ export function InvoiceForm({
                 onChange={(e) => setClientCity(e.target.value)}
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="client_postal_code">Postal Code</Label>
               <Input
                 id="client_postal_code"
@@ -232,7 +224,7 @@ export function InvoiceForm({
                 onChange={(e) => setClientPostalCode(e.target.value)}
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="client_country">Country</Label>
               <Input
                 id="client_country"
@@ -241,8 +233,8 @@ export function InvoiceForm({
               />
             </div>
           </div>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="space-y-2">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="space-y-1.5">
               <Label htmlFor="client_email">Email</Label>
               <Input
                 id="client_email"
@@ -251,7 +243,7 @@ export function InvoiceForm({
                 onChange={(e) => setClientEmail(e.target.value)}
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="client_phone">Phone</Label>
               <Input
                 id="client_phone"
@@ -260,7 +252,7 @@ export function InvoiceForm({
                 onChange={(e) => setClientPhone(e.target.value)}
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="client_vat_number">VAT Number</Label>
               <Input
                 id="client_vat_number"
@@ -269,22 +261,19 @@ export function InvoiceForm({
               />
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
       {/* Line Items */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Line Items</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <LineItemsEditor
-            items={items}
-            taxRate={taxRate}
-            onChange={setItems}
-          />
-        </CardContent>
-      </Card>
+      <section>
+        <h2 className="text-sm font-medium text-muted-foreground">Line Items</h2>
+        <Separator className="mt-2 mb-3" />
+        <LineItemsEditor
+          items={items}
+          taxRate={taxRate}
+          onChange={setItems}
+        />
+      </section>
     </form>
   );
 }
