@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { InvoiceForm } from "@/components/invoice-form";
 import { PdfDownloadButtonWrapper } from "@/components/pdf-download-button-wrapper";
+import { PageHeader } from "@/components/page-header";
 
 export default async function EditInvoicePage({
   params,
@@ -37,13 +38,16 @@ export default async function EditInvoicePage({
   return (
     <div className="space-y-6">
       {companySettings && (
-        <div className="flex justify-end">
-          <PdfDownloadButtonWrapper
-            invoice={invoice}
-            lineItems={lineItems ?? []}
-            companySettings={companySettings}
-          />
-        </div>
+        <PageHeader
+          title="Invoice"
+          actions={
+            <PdfDownloadButtonWrapper
+              invoice={invoice}
+              lineItems={lineItems ?? []}
+              companySettings={companySettings}
+            />
+          }
+        />
       )}
       <InvoiceForm
         invoice={invoice}
