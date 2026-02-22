@@ -184,6 +184,41 @@ export async function deleteInvoice(id: string) {
   return { success: true };
 }
 
+export interface QuickUpdateData {
+  issue_date?: string | null;
+  due_date?: string | null;
+  client_name?: string | null;
+  subtotal?: number | null;
+  total?: number | null;
+}
+
+export async function quickUpdateInvoice(id: string, data: QuickUpdateData) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Not authenticated" };
+  }
+
+  const { error } = await supabase
+    .from("invoices")
+    .update({
+      ...data,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath("/invoices");
+  return { success: true };
+}
+
 export async function getNextInvoiceNumber() {
   const supabase = await createClient();
 
