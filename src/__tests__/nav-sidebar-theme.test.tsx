@@ -108,3 +108,45 @@ describe("NavSidebar theme toggle", () => {
     expect(button.textContent).toContain("Dark");
   });
 });
+
+// --- NavSidebar Collapse Tests ---
+describe("NavSidebar collapse", () => {
+  afterEach(() => { cleanup(); });
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockThemeState = { theme: "light", setTheme: mockSetTheme };
+  });
+
+  it("renders collapse toggle button", () => {
+    const { getByTestId } = render(<NavSidebar userEmail="user@test.com" />);
+    expect(getByTestId("sidebar-collapse-toggle")).toBeInTheDocument();
+  });
+
+  it("shows nav labels when expanded (default state)", () => {
+    const { getByText } = render(<NavSidebar userEmail="user@test.com" />);
+    expect(getByText("Invoices")).toBeInTheDocument();
+    expect(getByText("Settings")).toBeInTheDocument();
+  });
+
+  it("hides nav labels when collapsed", () => {
+    const { getByTestId, queryByText } = render(
+      <NavSidebar userEmail="user@test.com" />
+    );
+    fireEvent.click(getByTestId("sidebar-collapse-toggle"));
+    expect(queryByText("Invoices")).not.toBeInTheDocument();
+    expect(queryByText("Settings")).not.toBeInTheDocument();
+  });
+
+  it("restores nav labels when expanded again", () => {
+    const { getByTestId, getByText, queryByText } = render(
+      <NavSidebar userEmail="user@test.com" />
+    );
+    // Collapse
+    fireEvent.click(getByTestId("sidebar-collapse-toggle"));
+    expect(queryByText("Invoices")).not.toBeInTheDocument();
+    // Expand
+    fireEvent.click(getByTestId("sidebar-collapse-toggle"));
+    expect(getByText("Invoices")).toBeInTheDocument();
+    expect(getByText("Settings")).toBeInTheDocument();
+  });
+});
