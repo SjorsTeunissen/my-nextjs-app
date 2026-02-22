@@ -5,12 +5,7 @@ import { saveCompanySettings, uploadLogo } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import type { Database } from "@/lib/types/database";
 
 type CompanySettings = Database["public"]["Tables"]["company_settings"]["Row"];
@@ -66,34 +61,26 @@ export function SettingsForm({ data }: { data: CompanySettings }) {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="mt-1 text-muted-foreground">
-          Manage your company settings and preferences.
-        </p>
-      </div>
-
+    <div className="space-y-1">
       {saveState?.success && (
-        <div className="rounded-md bg-green-50 p-4 text-sm text-green-800 dark:bg-green-900/20 dark:text-green-400">
+        <div className="rounded-md bg-green-50 p-3 text-sm text-green-800 dark:bg-green-900/20 dark:text-green-400">
           Settings saved successfully.
         </div>
       )}
 
       {saveState?.error && (
-        <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
+        <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
           {saveState.error}
         </div>
       )}
 
       <form action={saveFormAction} className="space-y-6">
         {/* Company Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Company Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
+        <section>
+          <h2 className="text-sm font-medium text-muted-foreground">Company Information</h2>
+          <Separator className="my-2" />
+          <div className="space-y-3">
+            <div className="space-y-1.5">
               <Label htmlFor="company_name">Company Name</Label>
               <Input
                 id="company_name"
@@ -102,16 +89,15 @@ export function SettingsForm({ data }: { data: CompanySettings }) {
                 defaultValue={data.company_name ?? ""}
               />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
         {/* Address */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Address</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
+        <section>
+          <h2 className="text-sm font-medium text-muted-foreground">Address</h2>
+          <Separator className="my-2" />
+          <div className="space-y-3">
+            <div className="space-y-1.5">
               <Label htmlFor="address_line1">Address Line 1</Label>
               <Input
                 id="address_line1"
@@ -120,7 +106,7 @@ export function SettingsForm({ data }: { data: CompanySettings }) {
                 defaultValue={data.address_line1 ?? ""}
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="address_line2">Address Line 2</Label>
               <Input
                 id="address_line2"
@@ -129,8 +115,8 @@ export function SettingsForm({ data }: { data: CompanySettings }) {
                 defaultValue={data.address_line2 ?? ""}
               />
             </div>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="space-y-2">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="space-y-1.5">
                 <Label htmlFor="city">City</Label>
                 <Input
                   id="city"
@@ -139,7 +125,7 @@ export function SettingsForm({ data }: { data: CompanySettings }) {
                   defaultValue={data.city ?? ""}
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="postal_code">Postal Code</Label>
                 <Input
                   id="postal_code"
@@ -148,7 +134,7 @@ export function SettingsForm({ data }: { data: CompanySettings }) {
                   defaultValue={data.postal_code ?? ""}
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="country">Country</Label>
                 <Input
                   id="country"
@@ -158,17 +144,16 @@ export function SettingsForm({ data }: { data: CompanySettings }) {
                 />
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
         {/* Contact */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Contact</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
+        <section>
+          <h2 className="text-sm font-medium text-muted-foreground">Contact</h2>
+          <Separator className="my-2" />
+          <div className="space-y-3">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
@@ -177,7 +162,7 @@ export function SettingsForm({ data }: { data: CompanySettings }) {
                   defaultValue={data.email ?? ""}
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="phone">Phone</Label>
                 <Input
                   id="phone"
@@ -187,16 +172,15 @@ export function SettingsForm({ data }: { data: CompanySettings }) {
                 />
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
         {/* Banking */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Banking</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
+        <section>
+          <h2 className="text-sm font-medium text-muted-foreground">Banking</h2>
+          <Separator className="my-2" />
+          <div className="space-y-3">
+            <div className="space-y-1.5">
               <Label htmlFor="bank_name">Bank Name</Label>
               <Input
                 id="bank_name"
@@ -205,8 +189,8 @@ export function SettingsForm({ data }: { data: CompanySettings }) {
                 defaultValue={data.bank_name ?? ""}
               />
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="bank_iban">IBAN</Label>
                 <Input
                   id="bank_iban"
@@ -215,7 +199,7 @@ export function SettingsForm({ data }: { data: CompanySettings }) {
                   defaultValue={data.bank_iban ?? ""}
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="bank_bic">BIC</Label>
                 <Input
                   id="bank_bic"
@@ -225,17 +209,16 @@ export function SettingsForm({ data }: { data: CompanySettings }) {
                 />
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
         {/* Tax */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Tax</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
+        <section>
+          <h2 className="text-sm font-medium text-muted-foreground">Tax</h2>
+          <Separator className="my-2" />
+          <div className="space-y-3">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="vat_number">VAT Number</Label>
                 <Input
                   id="vat_number"
@@ -244,7 +227,7 @@ export function SettingsForm({ data }: { data: CompanySettings }) {
                   defaultValue={data.vat_number ?? ""}
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="default_tax_rate">
                   Default Tax Rate (%)
                 </Label>
@@ -257,8 +240,8 @@ export function SettingsForm({ data }: { data: CompanySettings }) {
                 />
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
         <Button type="submit" disabled={savePending}>
           {savePending ? "Saving..." : "Save Settings"}
@@ -266,13 +249,12 @@ export function SettingsForm({ data }: { data: CompanySettings }) {
       </form>
 
       {/* Logo Upload (separate from the main form) */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Logo</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <section>
+        <h2 className="text-sm font-medium text-muted-foreground">Logo</h2>
+        <Separator className="my-2" />
+        <div className="space-y-3">
           {logoUrl && (
-            <div className="mb-4">
+            <div>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={logoUrl}
@@ -281,8 +263,8 @@ export function SettingsForm({ data }: { data: CompanySettings }) {
               />
             </div>
           )}
-          <div className="flex items-end gap-4">
-            <div className="space-y-2">
+          <div className="flex items-end gap-3">
+            <div className="space-y-1.5">
               <Label htmlFor="logo">Upload Logo</Label>
               <Input
                 id="logo"
@@ -293,6 +275,8 @@ export function SettingsForm({ data }: { data: CompanySettings }) {
             </div>
             <Button
               type="button"
+              variant="outline"
+              className="border-primary text-primary hover:bg-primary/10"
               onClick={handleLogoUpload}
               disabled={uploading}
             >
@@ -302,8 +286,8 @@ export function SettingsForm({ data }: { data: CompanySettings }) {
           {uploadError && (
             <p className="text-sm text-destructive">{uploadError}</p>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </section>
     </div>
   );
 }

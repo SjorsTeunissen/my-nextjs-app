@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { PageHeader } from "@/components/page-header";
 import { SettingsForm } from "./settings-form";
 
 export { SettingsForm };
@@ -11,5 +12,10 @@ export default async function SettingsPage() {
     .select("*")
     .single();
 
-  return <SettingsForm data={data!} />;
+  return (
+    <>
+      <PageHeader title="Settings" />
+      <SettingsForm data={data!} />
+    </>
+  );
 }
