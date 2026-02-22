@@ -123,3 +123,17 @@
     @apply bg-background text-foreground;
   }
 }
+
+[data-panel-group-direction="horizontal"] > [data-resize-handle] {
+  width: 1px;
+  background-color: var(--border);
+  transition: background-color 200ms;
+}
+
+[data-panel-group-direction="horizontal"] > [data-resize-handle]:hover {
+  background-color: var(--primary);
+}
+
+[data-panel-group-direction="horizontal"] > [data-resize-handle][data-resize-handle-active] {
+  background-color: var(--primary);
+}
