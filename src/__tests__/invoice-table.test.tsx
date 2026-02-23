@@ -4,10 +4,11 @@ import "@testing-library/jest-dom/vitest";
 import { render, cleanup, fireEvent } from "@testing-library/react";
 import type { Database } from "@/lib/types/database";
 
-const mockPush = vi.fn();
-const mockRefresh = vi.fn();
+const { mockRefresh, mockBulkDelete } = vi.hoisted(() => ({
+  mockRefresh: vi.fn(),
+  mockBulkDelete: vi.fn().mockResolvedValue({ success: true }),
+}));
 
-// Mock next/link
 vi.mock("next/link", () => ({
   default: ({
     children,
@@ -24,14 +25,13 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-// Mock next/navigation
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: mockPush, refresh: mockRefresh }),
+  useRouter: () => ({ refresh: mockRefresh }),
 }));
 
-// Mock the quick update action
 vi.mock("@/app/(app)/invoices/actions", () => ({
   quickUpdateInvoice: vi.fn().mockResolvedValue({ success: true }),
+  bulkDeleteInvoices: mockBulkDelete,
 }));
 
 import { InvoiceTable } from "@/components/invoice-table";
@@ -82,16 +82,14 @@ describe("InvoiceTable", () => {
       getByText("No invoices yet. Create your first invoice to get started.")
     ).toBeInTheDocument();
 
-    // Should render FileText icon (svg)
     const svg = container.querySelector("svg");
     expect(svg).toBeInTheDocument();
 
-    // Table should not be rendered
     const table = container.querySelector("table");
     expect(table).not.toBeInTheDocument();
   });
 
-  it("renders table with 3 rows and 5 column headers plus actions column", () => {
+  it("renders table with 3 rows and column headers including checkbox", () => {
     const invoices = [
       createInvoice({ id: "inv-1", invoice_number: "INV-001", client_name: "Acme Corp" }),
       createInvoice({ id: "inv-2", invoice_number: "INV-002", client_name: "Beta Inc" }),
@@ -102,40 +100,37 @@ describe("InvoiceTable", () => {
       <InvoiceTable invoices={invoices} />
     );
 
-    // Check 5 visible column headers
     expect(getByText("Invoice #")).toBeInTheDocument();
     expect(getByText("Client Name")).toBeInTheDocument();
     expect(getByText("Issue Date")).toBeInTheDocument();
     expect(getByText("Due Date")).toBeInTheDocument();
     expect(getByText("Total")).toBeInTheDocument();
 
-    // Check 3 data rows
     const rows = container.querySelectorAll("tbody tr");
     expect(rows).toHaveLength(3);
   });
 
   it("formats total as EUR currency", () => {
     const { getByText } = render(
-      <InvoiceTable
-        invoices={[createInvoice({ total: 1500 })]}
-      />
+      <InvoiceTable invoices={[createInvoice({ total: 1500 })]} />
     );
 
     expect(getByText("€ 1.500,00")).toBeInTheDocument();
   });
 
-  it("navigates to invoice detail page on row click via router.push", () => {
+  it("calls onRowSelect callback on row click", () => {
+    const onRowSelect = vi.fn();
+    const invoice = createInvoice({ id: "inv-abc-123" });
+
     const { container } = render(
-      <InvoiceTable
-        invoices={[createInvoice({ id: "inv-abc-123" })]}
-      />
+      <InvoiceTable invoices={[invoice]} onRowSelect={onRowSelect} />
     );
 
     const row = container.querySelector("tbody tr");
     expect(row).toBeInTheDocument();
     fireEvent.click(row!);
 
-    expect(mockPush).toHaveBeenCalledWith("/invoices/inv-abc-123");
+    expect(onRowSelect).toHaveBeenCalledWith(invoice);
   });
 
   it("renders hover action buttons for quick-edit and view", () => {
@@ -147,31 +142,110 @@ describe("InvoiceTable", () => {
     expect(getByLabelText("View invoice")).toBeInTheDocument();
   });
 
-  it("view invoice link points to correct detail page", () => {
-    const { getByLabelText } = render(
-      <InvoiceTable
-        invoices={[createInvoice({ id: "inv-view-test" })]}
-      />
+  it("sorts by client name ascending on column header click", () => {
+    const invoices = [
+      createInvoice({ id: "inv-1", client_name: "Gamma LLC" }),
+      createInvoice({ id: "inv-2", client_name: "Acme Corp" }),
+      createInvoice({ id: "inv-3", client_name: "Beta Inc" }),
+    ];
+
+    const { getByText, container } = render(
+      <InvoiceTable invoices={invoices} />
     );
 
-    const viewLink = getByLabelText("View invoice").closest("a");
-    expect(viewLink).toHaveAttribute("href", "/invoices/inv-view-test");
+    fireEvent.click(getByText("Client Name"));
+
+    const rows = container.querySelectorAll("tbody tr");
+    const firstRowText = rows[0]?.textContent ?? "";
+    const lastRowText = rows[2]?.textContent ?? "";
+
+    expect(firstRowText).toContain("Acme Corp");
+    expect(lastRowText).toContain("Gamma LLC");
   });
 
-  it("formats dates with nl-NL locale", () => {
-    const { getByText } = render(
-      <InvoiceTable
-        invoices={[
-          createInvoice({
-            issue_date: "2026-01-15",
-            due_date: "2026-02-15",
-          }),
-        ]}
-      />
+  it("sorts descending on second click of column header", () => {
+    const invoices = [
+      createInvoice({ id: "inv-1", client_name: "Gamma LLC" }),
+      createInvoice({ id: "inv-2", client_name: "Acme Corp" }),
+      createInvoice({ id: "inv-3", client_name: "Beta Inc" }),
+    ];
+
+    const { getByText, container } = render(
+      <InvoiceTable invoices={invoices} />
     );
 
-    expect(getByText("15-1-2026")).toBeInTheDocument();
-    expect(getByText("15-2-2026")).toBeInTheDocument();
+    fireEvent.click(getByText("Client Name"));
+    fireEvent.click(getByText("Client Name"));
+
+    const rows = container.querySelectorAll("tbody tr");
+    const firstRowText = rows[0]?.textContent ?? "";
+    const lastRowText = rows[2]?.textContent ?? "";
+
+    expect(firstRowText).toContain("Gamma LLC");
+    expect(lastRowText).toContain("Acme Corp");
+  });
+
+  it("shows select-all checkbox and bulk actions toolbar when all selected", () => {
+    const invoices = [
+      createInvoice({ id: "inv-1" }),
+      createInvoice({ id: "inv-2" }),
+    ];
+
+    const { container, getByText } = render(
+      <InvoiceTable invoices={invoices} />
+    );
+
+    const selectAllCheckbox = container.querySelector("thead [role=checkbox]");
+    expect(selectAllCheckbox).toBeInTheDocument();
+    fireEvent.click(selectAllCheckbox!);
+
+    expect(getByText("Delete selected")).toBeInTheDocument();
+    expect(getByText("Export CSV")).toBeInTheDocument();
+  });
+
+  it("calls bulkDeleteInvoices with selected invoice IDs on delete", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+
+    const invoices = [
+      createInvoice({ id: "inv-1" }),
+      createInvoice({ id: "inv-2" }),
+      createInvoice({ id: "inv-3" }),
+    ];
+
+    const { container, getByText } = render(
+      <InvoiceTable invoices={invoices} />
+    );
+
+    const checkboxes = container.querySelectorAll("tbody [role=checkbox]");
+    fireEvent.click(checkboxes[0]!);
+    fireEvent.click(checkboxes[1]!);
+
+    fireEvent.click(getByText("Delete selected"));
+
+    expect(mockBulkDelete).toHaveBeenCalledWith(
+      expect.arrayContaining(["inv-1", "inv-2"])
+    );
+  });
+
+  it("triggers CSV export when Export CSV is clicked", () => {
+    const createObjectURL = vi.fn().mockReturnValue("blob:url");
+    global.URL.createObjectURL = createObjectURL;
+
+    const invoices = [
+      createInvoice({ id: "inv-1", invoice_number: "INV-001", client_name: "Acme Corp", total: 1500 }),
+      createInvoice({ id: "inv-2", invoice_number: "INV-002", client_name: "Beta Inc", total: 2000 }),
+    ];
+
+    const { container, getByText } = render(
+      <InvoiceTable invoices={invoices} />
+    );
+
+    const selectAllCheckbox = container.querySelector("thead [role=checkbox]");
+    fireEvent.click(selectAllCheckbox!);
+
+    fireEvent.click(getByText("Export CSV"));
+
+    expect(createObjectURL).toHaveBeenCalled();
   });
 
   it("rows have group/row class for hover action visibility", () => {

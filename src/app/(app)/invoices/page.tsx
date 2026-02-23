@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { InvoiceTable } from "@/components/invoice-table";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
+import { InvoicesClient } from "./invoices-client";
 
 export default async function InvoicesPage() {
   const supabase = await createClient();
@@ -26,7 +26,7 @@ export default async function InvoicesPage() {
           </Button>
         }
       />
-      <InvoiceTable invoices={invoices ?? []} />
+      <InvoicesClient invoices={invoices ?? []} />
     </>
   );
 }

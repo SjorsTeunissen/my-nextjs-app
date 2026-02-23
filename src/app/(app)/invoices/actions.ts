@@ -219,6 +219,27 @@ export async function quickUpdateInvoice(id: string, data: QuickUpdateData) {
   return { success: true };
 }
 
+export async function bulkDeleteInvoices(ids: string[]) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Not authenticated" };
+  }
+
+  const { error } = await supabase.from("invoices").delete().in("id", ids);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath("/invoices");
+  return { success: true };
+}
+
 export async function getNextInvoiceNumber() {
   const supabase = await createClient();
 

@@ -1,94 +1,127 @@
-# SER-30 Implementation Plan: Redesign App Shell with Responsive Sidebar and Page Header
-
-## Issue Summary
-Redesign the app shell layout with a compact Linear-style sidebar (desktop collapse toggle, mobile Sheet drawer), a reusable PageHeader component, and responsive breakpoints.
+# SER-39: Advanced Data Table with Sorting, Filtering, and Bulk Actions
 
 ## Approach
-Refactor `nav-sidebar.tsx` to support collapsed/expanded states with a toggle button, create a `mobile-sidebar.tsx` that wraps sidebar content in a Sheet drawer for mobile (<768px), create a `page-header.tsx` component for consistent page titles and action buttons, and update `layout.tsx` to integrate all pieces with responsive breakpoints. Use TDD: write tests first, then implement.
+Rewrite the invoice table component using `@tanstack/react-table` with full sorting, client-side filtering via a new filter bar component, checkbox row selection with bulk actions, and column resizing. Add a `bulkDeleteInvoices` server action. Use TDD -- write tests first, then implement.
 
-## Scope
-
-### Files to Modify
-- `src/components/nav-sidebar.tsx` - Modify: Add collapse toggle, compact styling, conditional icon-only mode
-- `src/app/(app)/layout.tsx` - Modify: Integrate mobile sidebar, responsive layout, sidebar state management
-- `src/__tests__/nav-sidebar-theme.test.tsx` - Modify: Update existing tests for new structure, add collapse tests
-
-### Files to Create
-- `src/components/mobile-sidebar.tsx` - Create: Sheet-based drawer for mobile (<768px) with hamburger trigger
-- `src/components/page-header.tsx` - Create: Reusable title + action buttons component
-- `src/__tests__/mobile-sidebar.test.tsx` - Create: Tests for Sheet open/close, navigation
-- `src/__tests__/page-header.test.tsx` - Create: Tests for title rendering, action buttons
-
-### Files NOT to Modify
-- `src/app/globals.css` - Already updated in SER-29 (Task 1)
-- `src/components/ui/*` - Already installed/styled in SER-29 (Task 1)
-- `src/components/invoice-table.tsx` - Task 5 scope
-- `src/components/invoice-form.tsx` - Task 6 scope
-- `src/app/(app)/settings/settings-form.tsx` - Task 7 scope
-- `src/components/command-palette.tsx` - Task 4 scope
-
-## Design Decisions
-
-### Sidebar Collapse State
-- Use React `useState` for collapsed state in NavSidebar
-- Collapsed mode: icon-only (no labels), narrower width (~64px vs ~240px)
-- Toggle button at the bottom of the sidebar (chevron icon)
-- Sidebar remembers state within session only (no DB persistence for this PR)
-
-### Mobile Sidebar
-- Below `md` breakpoint (768px), hide the desktop sidebar entirely
-- Show a hamburger `Menu` button in a top bar
-- Hamburger opens a Sheet from the left with the full sidebar navigation
-- Sheet closes on navigation (link click) or close button
-
-### PageHeader Component
-- Renders `<header>` with a title (`h1`) and optional `actions` slot (ReactNode)
-- Used by all pages: Invoices, New Invoice, Edit Invoice, Settings
-- Integrated into the `layout.tsx` main content area - but since page content is `{children}`, each page will use `PageHeader` directly at the top of its content
-
-### Layout Changes
-- Desktop: `flex` layout with sidebar (collapsible) + main area
-- Mobile: sidebar hidden, top bar with hamburger + main area
-- Use Tailwind `md:` breakpoint for responsive switching
-- The `MobileSidebar` component handles its own show/hide based on screen size using CSS classes (`md:hidden`)
+## Key Files to Modify
+- `src/components/invoice-table.tsx` -- full rewrite with @tanstack/react-table
+- `src/components/invoice-filter-bar.tsx` -- new component
+- `src/app/(app)/invoices/page.tsx` -- wire filter state, add onRowSelect prop
+- `src/app/(app)/invoices/actions.ts` -- add bulkDeleteInvoices
+- `src/__tests__/invoice-table.test.tsx` -- full test rewrite
+- `src/__tests__/invoice-filter-bar.test.tsx` -- new test file
 
 ## Test Strategy
-
-### Phase 1: PageHeader Tests (new file)
-Tests for `page-header.test.tsx`:
-1. Renders title text
-2. Renders action buttons when provided
-3. Renders without action buttons (optional)
-4. Uses semantic heading element
-
-### Phase 2: Mobile Sidebar Tests (new file)
-Tests for `mobile-sidebar.test.tsx`:
-1. Renders hamburger menu button
-2. Opens Sheet when hamburger clicked
-3. Shows navigation links in Sheet
-4. Closes Sheet on close button click
-
-### Phase 3: NavSidebar Tests (update existing)
-Update `nav-sidebar-theme.test.tsx`:
-1. Update existing tests for new sidebar structure (add `collapsed` prop or internal state)
-2. Add test: renders collapse toggle button
-3. Add test: clicking toggle collapses sidebar (hides labels)
-4. Add test: collapsed sidebar shows only icons
-
-### Test Mocks
-- Reuse existing `next-themes`, `next/navigation`, `theme-actions`, `login/actions` mocks
-- Mock `radix-ui` Dialog for Sheet tests (or use existing Sheet component rendering)
-- Use `@testing-library/react` `fireEvent` for interactions
-
-## Implementation Order (TDD)
-1. Write `page-header.test.tsx` tests (RED)
-2. Implement `page-header.tsx` (GREEN)
-3. Write `mobile-sidebar.test.tsx` tests (RED)
-4. Implement `mobile-sidebar.tsx` (GREEN)
-5. Update `nav-sidebar-theme.test.tsx` with collapse tests (RED)
-6. Update `nav-sidebar.tsx` with collapse functionality (GREEN)
-7. Update `layout.tsx` to integrate all components
-8. Run all tests, lint, type-check, build
+Write tests first covering all 14 test scenarios from the AC. Tests use vitest + @testing-library/react with mocked next/navigation and server actions. The `createInvoice()` factory pattern from existing tests will be reused.
 
 ## Estimated Complexity
-L (Large) - Multiple new components, test files, and significant refactoring of existing sidebar
+Large (L)
+
+---
+
+## Phase 1: Write Tests (TDD Red Phase)
+
+### 1a. Rewrite `src/__tests__/invoice-table.test.tsx`
+
+Tests to write:
+1. **Render table with 3 invoices** -- Table shows 3 rows with columns: checkbox, invoice number, client name, issue date, due date, total, actions
+2. **Click "Client Name" column header** -- Rows sort by client name ascending; arrow indicator shows up
+3. **Click "Client Name" column header twice** -- Rows sort descending; arrow indicator shows down
+4. **Click a table row** -- `onRowSelect` callback called with the clicked invoice
+5. **Hover action buttons** -- Quick-edit and view buttons present
+6. **Empty state** -- Shows empty state message when no invoices
+7. **Format currency** -- Total formatted as EUR
+8. **Select-all checkbox** -- All visible row checkboxes checked; bulk actions toolbar appears
+9. **Select 2 rows, click Delete selected** -- `bulkDeleteInvoices` called with 2 invoice IDs
+10. **Select 3 rows, click Export CSV** -- CSV download triggered
+11. **Rows have group/row class** -- For hover action visibility
+
+Key mocking changes:
+- Remove `useRouter`/`router.push` mock (row click now uses `onRowSelect` callback)
+- Add `onRowSelect` mock as a prop
+- Add `bulkDeleteInvoices` action mock
+- Keep `quickUpdateInvoice` mock for InvoiceQuickEdit
+
+### 1b. Create `src/__tests__/invoice-filter-bar.test.tsx`
+
+Tests to write:
+1. **Type "Acme" in client name filter** -- `onFiltersChange` called with client name filter
+2. **Set date range filter** -- `onFiltersChange` called with date range
+3. **Set amount range filter** -- `onFiltersChange` called with amount range
+4. **Click dismiss on filter badge** -- Filter removed
+5. **Click "Clear all"** -- All filters removed
+6. **Active filters shown as badges** -- Badges rendered for active filters
+
+## Phase 2: Implement Components (TDD Green Phase)
+
+### 2a. Add `bulkDeleteInvoices` to `src/app/(app)/invoices/actions.ts`
+
+Server action that accepts `ids: string[]`, deletes from invoices table using `.in('id', ids)`, calls `revalidatePath("/invoices")`.
+
+### 2b. Create `src/components/invoice-filter-bar.tsx`
+
+New client component with:
+- Props: `filters` state object, `onFiltersChange` callback
+- Client name text input (debounced 300ms)
+- Issue date range (from/to date inputs)
+- Total amount range (min/max number inputs)
+- Active filters shown as dismissible Badge chips
+- "Clear all" button when any filter active
+
+Filter state interface:
+```typescript
+interface InvoiceFilters {
+  clientName: string;
+  issueDateFrom: string;
+  issueDateTo: string;
+  totalMin: string;
+  totalMax: string;
+}
+```
+
+### 2c. Rewrite `src/components/invoice-table.tsx`
+
+Full rewrite using `useReactTable` with:
+- Column defs: checkbox (selection), invoice_number, client_name, issue_date, due_date, total, actions
+- `getCoreRowModel()`, `getSortedRowModel()`
+- `columnResizeMode: "onEnd"`
+- `enableRowSelection: true`
+- Sort toggle on header click with arrow indicators (ArrowUp/ArrowDown from lucide)
+- Row click calls `onRowSelect(invoice)` via callback prop
+- Existing hover actions (InvoiceQuickEdit + view link) preserved with `stopPropagation`
+- Bulk actions toolbar (delete selected, export CSV) when rows selected
+- Export CSV creates a Blob download with selected invoice data
+
+Props:
+```typescript
+interface InvoiceTableProps {
+  invoices: Invoice[];
+  onRowSelect?: (invoice: Invoice) => void;
+}
+```
+
+### 2d. Modify `src/app/(app)/invoices/page.tsx`
+
+- Keep Server Component for data fetching
+- Create a client wrapper component `InvoicesClient` that manages filter state
+- Import InvoiceFilterBar and wire filter state
+- Apply client-side filtering with AND logic on the invoice array
+- Pass `onRowSelect` prop to InvoiceTable
+
+## Phase 3: Run Tests & Validate
+
+1. Run tests for modified files
+2. Run full test suite for regression check
+3. Run `npx tsc --noEmit` for type checking
+4. Run `npx next build` to verify production build
+5. Run linter
+
+## Phase 4: Quality Validation
+
+Run applicable Tier 1 frontend skills on changed files.
+
+## Phase 5: Commit & PR
+
+1. Commit with conventional format
+2. Push branch
+3. Open PR targeting main
