@@ -32,4 +32,27 @@ describe("PageHeader", () => {
     // Should not have an actions container when no actions provided
     expect(header?.querySelectorAll("button")).toHaveLength(0);
   });
+
+  it("renders breadcrumbs when provided", () => {
+    const { getByText } = render(
+      <PageHeader
+        title="Invoice Detail"
+        breadcrumbs={<nav>breadcrumb nav</nav>}
+      />
+    );
+    expect(getByText("breadcrumb nav")).toBeInTheDocument();
+  });
+
+  it("does not render breadcrumb container when breadcrumbs not provided", () => {
+    const { container } = render(<PageHeader title="Invoices" />);
+    const header = container.querySelector("header");
+    // Header should only contain the title row, not an extra breadcrumb wrapper
+    expect(header?.children).toHaveLength(1);
+  });
+
+  it("applies Heading-page typography to title", () => {
+    const { getByRole } = render(<PageHeader title="Invoices" />);
+    const heading = getByRole("heading", { level: 1 });
+    expect(heading).toHaveClass("text-lg", "font-semibold", "tracking-tight");
+  });
 });

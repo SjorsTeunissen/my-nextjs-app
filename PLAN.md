@@ -1,136 +1,129 @@
-# PLAN: SER-44 -- Restyle UI Primitive Components
-
-## Context
-
-SER-43 updated `globals.css` with Ink & Ledger CSS custom properties. The Tailwind theme maps:
-- `bg-primary` -> `--primary` (navy oklch(0.40 0.12 260))
-- `bg-destructive` -> `--destructive` (stamp-red)
-- `bg-card` -> `--card` (warm surface)
-- `border` -> `--border` (warm)
-- `bg-accent` -> `--accent` (navy-subtle)
-- `bg-muted` -> `--muted` (warm tint)
-- `--radius: 0.5rem` (8px), `--radius-sm` = 4px, `--radius-md` = 6px
-
-Components already get some of the new palette for free via CSS variables. This task updates
-the Tailwind **classes** to match the specific design tokens in system.md (shadows, radii,
-heights, new badge variants, sticky headers, etc.).
-
-**Key constraint:** Do NOT modify `globals.css`. Only change UI primitive component files + test file.
+# PLAN: SER-46 - Shell - Add breadcrumbs, page header & error boundary
 
 ## File Changes
 
-### 1. MODIFY: src/components/ui/button.tsx
-**Pattern source:** .interface-design/system.md:138-139
+### 1. CREATE: src/__tests__/breadcrumbs.test.tsx
+**Reference:** src/__tests__/invoice-table.test.tsx:12-26 (next/link mock pattern)
+```tsx
+// next/link mock pattern from invoice-table.test.tsx:12-26
+vi.mock("next/link", () => ({
+  default: ({
+    children,
+    href,
+    ...props
+  }: {
+    children: React.ReactNode;
+    href: string;
+    [key: string]: unknown;
+  }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+}));
 ```
-Radius-sm:  4px   -- buttons, inputs, badges
-```
-**Current (line 8):** Base classes include `rounded-md` (6px)
-**Action:** Change `rounded-md` to `rounded-sm` in the base cva string (line 8). This gives Radius-sm = 4px per system.md. All variant styling already references CSS vars (bg-primary = navy, bg-destructive = stamp-red) so no variant changes needed.
-
-### 2. MODIFY: src/components/ui/input.tsx
-**Pattern source:** .interface-design/system.md:45-47, 138-139
-```
-Input-bg:    oklch(0.975 0.004 85)  -- slightly darker than surface, inset feel
-Input-border: oklch(0.85 0.006 85)  -- control border (mapped to --input)
-Radius-sm:   4px                     -- buttons, inputs, badges
-```
-**Current (line 11):** `rounded-md border-input bg-transparent`
-**Action:**
-- Change `rounded-md` to `rounded-sm` (Radius-sm = 4px)
-- Change `bg-transparent` to `bg-input/30` to get the warm inset Input-bg feel
-
-### 3. MODIFY: src/components/ui/card.tsx
-**Pattern source:** .interface-design/system.md:122-126, 140, 162-165
-```
-Elevation-1:  shadow-[0_1px_2px_0_oklch(0_0_0/0.04)] + border
-Radius-md:    6px  -- cards, panels, dropdowns
-Cards:        p-4 for compact, p-6 for content
-```
-**Current (line 10):** `rounded-lg border py-4 shadow-xs`
-**Action:**
-- Change `rounded-lg` to `rounded-md` (Radius-md = 6px)
-- Change `shadow-xs` to `shadow-[0_1px_2px_0_oklch(0_0_0/0.04)]` (Elevation-1)
-- Keep `py-4` and child `px-4` (matches compact card; consumers can override for p-6 content)
-
-### 4. MODIFY: src/components/ui/badge.tsx
-**Pattern source:** .interface-design/system.md:32-39, 139
-```
-Ledger-green:    oklch(0.52 0.14 155) / bg: oklch(0.95 0.03 155)
-Stamp-red:       oklch(0.55 0.20 25)  / bg: oklch(0.95 0.03 25)
-Amber:           oklch(0.65 0.16 75)  / bg: oklch(0.95 0.04 75)
-Dark variants:   Ledger-green oklch(0.62 0.12 155)/bg oklch(0.20 0.03 155)
-                 Stamp-red oklch(0.65 0.16 25)/bg oklch(0.20 0.03 25)
-                 Amber oklch(0.72 0.14 75)/bg oklch(0.20 0.03 75)
-Radius-sm:       4px -- buttons, inputs, badges
-```
-**Current (line 8):** `rounded-full` base, variants: default/secondary/destructive/outline/ghost/link
-**Action:**
-- Change `rounded-full` to `rounded-sm` (Radius-sm = 4px)
-- Add `success` variant with ledger-green tinted bg + text
-- Update `destructive` variant to use tinted bg (stamp-red-bg + stamp-red text) instead of solid bg
-- Add `warning` variant with amber tinted bg + text
-- Keep existing default, secondary, outline, ghost, link variants
-
-### 5. MODIFY: src/components/ui/separator.tsx
-**Current:** Uses `bg-border` which maps to `--border` (warm border from SER-43).
-**Action:** No changes needed -- already correct via CSS variable inheritance.
-
-### 6. MODIFY: src/components/ui/table.tsx
-**Pattern source:** .interface-design/system.md:167-174, 92
-```
-Row height: 44px (h-11)
-Header: Heading-label style (text-xs font-medium uppercase tracking-wider), sticky
-Row hover: subtle surface shift
-Selected: navy-subtle background (bg-secondary)
-```
-**Current:**
-- TableRow (line 59-60): `hover:bg-muted/50 data-[state=selected]:bg-muted border-b` (no height)
-- TableHead (line 72-73): `h-8 px-2 text-left align-middle font-medium` (no sticky/uppercase)
-- TableHeader (line 26): `[&_tr]:border-b` (no bg)
-
-**Action:**
-- TableRow: add `h-11` for 44px row height. Change `data-[state=selected]:bg-muted` to `data-[state=selected]:bg-secondary`
-- TableHead: change `h-8` to `h-11`, add `sticky top-0 z-10 bg-background`, add `text-xs uppercase tracking-wider`, remove `text-foreground` (will inherit)
-- TableHeader: keep as-is (border on tr)
-
-### 7. MODIFY: src/components/ui/skeleton.tsx
-**Pattern source:** .interface-design/system.md:188-191
-```
-Skeleton Loading: Pulse animation on surface-colored rectangles
-```
-**Current (line 7):** `bg-accent animate-pulse rounded-md`
-**Action:** Change `bg-accent` to `bg-muted` for warm surface tint instead of navy-subtle.
-
-### 8. MODIFY: src/__tests__/ui-components-restyled.test.tsx
-**Action:** Rewrite tests to match new classes. Import Badge and Skeleton.
-
 **Concrete test cases:**
-1. "Button default uses bg-primary" (navy via CSS var)
-2. "Button uses rounded-sm" (Radius-sm)
-3. "Button preserves all variant names"
-4. "Button preserves data-slot, data-variant, data-size attributes"
-5. "Input uses rounded-sm" (was rounded-md)
-6. "Input uses bg-input/30"
-7. "Card uses Elevation-1 shadow"
-8. "Card uses rounded-md" (was rounded-lg)
-9. "CardHeader uses px-4"
-10. "CardContent uses px-4"
-11. "Badge uses rounded-sm" (was rounded-full)
-12. "Badge success variant renders"
-13. "Badge destructive variant renders"
-14. "Badge warning variant renders"
-15. "TableRow uses h-11" (44px)
-16. "TableHead uses h-11 and sticky"
-17. "TableHead uses uppercase tracking-wider"
-18. "Skeleton uses bg-muted" (was bg-accent)
-19. "Separator renders with bg-border"
+1. "renders breadcrumb items with correct labels" - items [{label: "Invoices", href: "/invoices"}, {label: "INV-001"}] renders both labels
+2. "renders parent items as links with correct href" - "Invoices" is a link with href="/invoices"
+3. "renders current (last) item as plain text, not a link" - "INV-001" uses BreadcrumbPage (span), not a link
+4. "renders separator between items" - separator element exists between items
+5. "renders single item without separator" - [{label: "Dashboard"}] renders just text, no separator
+6. "renders with nav element with aria-label breadcrumb" - nav[aria-label="breadcrumb"] exists
+
+### 2. CREATE: src/components/breadcrumbs.tsx
+**Reference:** src/components/ui/breadcrumb.tsx (shadcn breadcrumb primitives)
+```tsx
+// shadcn primitives to use:
+// Breadcrumb -> wraps as <nav aria-label="breadcrumb">
+// BreadcrumbList -> <ol> with flex wrap styling
+// BreadcrumbItem -> <li> inline-flex
+// BreadcrumbLink -> <a> with hover:text-foreground (use asChild with Next Link)
+// BreadcrumbPage -> <span> with aria-current="page"
+// BreadcrumbSeparator -> <li> with ChevronRight icon
+```
+**Action:** Create `AppBreadcrumbs` component that accepts `items: Array<{ label: string; href?: string }>`. Map items to BreadcrumbItem components. If item has `href`, render BreadcrumbLink with Next.js Link (asChild). If last item (no href), render BreadcrumbPage. Add BreadcrumbSeparator between items.
+
+### 3. MODIFY: src/components/page-header.tsx
+**Pattern source:** src/components/page-header.tsx:1-21 (current implementation)
+```tsx
+// Current implementation:
+interface PageHeaderProps {
+  title: string;
+  actions?: React.ReactNode;
+  className?: string;
+}
+
+export function PageHeader({ title, actions, className }: PageHeaderProps) {
+  return (
+    <header className={cn("flex items-center justify-between pb-4", className)}>
+      <h1 className="text-lg font-semibold">{title}</h1>
+      {actions && <div className="flex items-center gap-2">{actions}</div>}
+    </header>
+  );
+}
+```
+**Action:**
+- Add optional `breadcrumbs?: React.ReactNode` prop to PageHeaderProps
+- Render breadcrumbs above the title row when provided
+- Update h1 className to `text-lg font-semibold tracking-tight` (Heading-page typography from system.md)
+- Restructure: outer header gets `flex flex-col gap-1` when breadcrumbs present, inner div has the title+actions flex row
+
+### 4. MODIFY: src/__tests__/page-header.test.tsx
+**Reference:** src/__tests__/page-header.test.tsx:1-35 (current tests)
+```tsx
+// Current tests: renders title, renders heading, renders actions, renders without actions
+```
+**Concrete test cases (additions):**
+1. "renders breadcrumbs when provided" - pass breadcrumbs={<nav>breadcrumb nav</nav>} and assert it appears
+2. "does not render breadcrumb container when breadcrumbs not provided" - no extra wrapper when breadcrumbs omitted
+3. "applies Heading-page typography to title" - h1 has classes text-lg, font-semibold, tracking-tight
+
+### 5. CREATE: src/app/(app)/error.tsx
+**Reference:** Next.js error.tsx convention - client component with error and reset props
+```tsx
+// Next.js error.tsx convention:
+"use client";
+// Props: { error: Error & { digest?: string }; reset: () => void }
+// Must be a client component
+// reset() re-renders the route segment
+```
+**Action:** Create error boundary with:
+- "use client" directive
+- Friendly message: "Something went wrong"
+- Description text explaining the error
+- "Try again" button that calls reset()
+- Centered layout with appropriate spacing
+- Uses Button component from ui/button
+
+### 6. CREATE: src/__tests__/error-boundary.test.tsx
+**Concrete test cases:**
+1. "displays friendly error message" - renders "Something went wrong" text
+2. "displays try again button" - button with text "Try again" exists
+3. "calls reset when try again button is clicked" - clicking button calls the reset() prop
+4. "does not display raw error message" - the Error object's message is not rendered
+
+### 7. MODIFY: src/app/(app)/layout.tsx
+**Pattern source:** src/app/(app)/layout.tsx:39-45 (content area)
+```tsx
+// Current content area:
+<div className="flex flex-1 flex-col overflow-hidden">
+  <header className="flex h-12 items-center border-b px-4 md:hidden">
+    <MobileSidebar userEmail={user.email ?? ""} />
+    <span className="ml-2 text-sm font-semibold">Invoice Generator</span>
+  </header>
+  <main className="flex-1 overflow-auto p-6">{children}</main>
+</div>
+```
+**Action:** No structural changes needed. Next.js automatically picks up `error.tsx` at the `(app)` route level. The layout spacing (`p-6`) already matches system.md's content padding spec for desktop. No changes required.
 
 ## Reusable Utilities
-- `cn` from `src/lib/utils.ts:4` (clsx + tailwind-merge for conditional classes)
+- `cn` from `src/lib/utils.ts:4` (conditional class merging)
+- shadcn breadcrumb primitives from `src/components/ui/breadcrumb.tsx` (Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator)
 
 ## Out of Scope
-- DO NOT modify `src/app/globals.css` (belongs to SER-43)
-- DO NOT modify `src/components/app-shell.tsx` (belongs to SER-45)
-- DO NOT modify `src/components/nav-sidebar.tsx` (belongs to SER-45)
-- DO NOT modify any page-level components
-- DO NOT add size variants to Badge beyond what's specified
+- DO NOT modify `src/components/app-shell.tsx` (SER-45 handles shell restyle)
+- DO NOT modify `src/components/nav-sidebar.tsx` (SER-45 handles nav restyle)
+- DO NOT modify `src/components/mobile-sidebar.tsx` (SER-45 handles mobile nav)
+- DO NOT add breadcrumbs to individual pages (future issues handle this)
+- DO NOT add error logging or reporting services
+- DO NOT modify files outside the Scope Files list
