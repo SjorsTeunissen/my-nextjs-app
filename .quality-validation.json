@@ -1,9 +1,14 @@
 {
-  "identifier": "SER-44",
-  "timestamp": "2026-02-23T16:25:00.000Z",
+  "identifier": "SER-46",
+  "timestamp": "2026-02-23T16:43:00.000Z",
   "skills_run": ["vitest", "tsc", "eslint", "next-build"],
   "violations_found": 0,
   "violations_fixed": 0,
   "violations_remaining": 0,
-  "summary": "All 307 tests pass, TypeScript clean, ESLint clean, build succeeds"
+  "results": {
+    "vitest": { "status": "passed", "tests": 320, "failures": 0 },
+    "tsc": { "status": "passed", "errors": 0 },
+    "eslint": { "status": "passed", "errors": 0, "warnings": 0 },
+    "next-build": { "status": "passed" }
+  }
 }
