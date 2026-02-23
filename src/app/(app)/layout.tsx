@@ -41,7 +41,7 @@ export default async function AppLayout({
             <MobileSidebar userEmail={user.email ?? ""} />
             <span className="ml-2 text-sm font-semibold">Invoice Generator</span>
           </header>
-          <main className="flex-1 overflow-auto p-6">{children}</main>
+          <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
         </div>
       </AppShell>
     </div>
