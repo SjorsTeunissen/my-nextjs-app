@@ -108,23 +108,28 @@ export function NavSidebar({
                 />
               </button>
             )}
-            {!collapsedSections[section.label] &&
-              section.items.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-label={collapsed ? item.label : undefined}
-                  className={cn(
-                    "flex items-center rounded-md text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                    collapsed ? "justify-center px-2 py-2" : "gap-3 px-3 py-2",
-                    pathname.startsWith(item.href) &&
-                      "bg-sidebar-accent text-sidebar-accent-foreground"
-                  )}
-                >
-                  <item.icon className="size-4 shrink-0" />
-                  {!collapsed && item.label}
-                </Link>
-              ))}
+            {!collapsedSections[section.label] && (
+              <div className="section-expand motion-reduce:transition-none">
+                <div className="overflow-hidden">
+                  {section.items.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      aria-label={collapsed ? item.label : undefined}
+                      className={cn(
+                        "flex items-center rounded-md text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                        collapsed ? "justify-center px-2 py-2" : "gap-3 px-3 py-2",
+                        pathname.startsWith(item.href) &&
+                          "bg-sidebar-accent text-sidebar-accent-foreground"
+                      )}
+                    >
+                      <item.icon className="size-4 shrink-0" />
+                      {!collapsed && item.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </nav>
