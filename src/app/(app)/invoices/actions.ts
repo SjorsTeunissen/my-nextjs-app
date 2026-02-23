@@ -240,6 +240,24 @@ export async function bulkDeleteInvoices(ids: string[]) {
   return { success: true };
 }
 
+export async function getInvoiceWithLineItems(id: string) {
+  const supabase = await createClient();
+
+  const { data: invoice } = await supabase
+    .from("invoices")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  const { data: lineItems } = await supabase
+    .from("invoice_line_items")
+    .select("*")
+    .eq("invoice_id", id)
+    .order("sort_order");
+
+  return { invoice, lineItems: lineItems ?? [] };
+}
+
 export async function getNextInvoiceNumber() {
   const supabase = await createClient();
 

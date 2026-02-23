@@ -6,6 +6,7 @@ import {
   InvoiceFilterBar,
   type InvoiceFilters,
 } from "@/components/invoice-filter-bar";
+import { InvoiceDetailPanel } from "@/components/invoice-detail-panel";
 import type { Database } from "@/lib/types/database";
 
 type Invoice = Database["public"]["Tables"]["invoices"]["Row"];
@@ -46,6 +47,7 @@ function applyFilters(invoices: Invoice[], filters: InvoiceFilters): Invoice[] {
 
 export function InvoicesClient({ invoices }: { invoices: Invoice[] }) {
   const [filters, setFilters] = useState<InvoiceFilters>(emptyFilters);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
   const filteredInvoices = useMemo(
     () => applyFilters(invoices, filters),
@@ -55,7 +57,14 @@ export function InvoicesClient({ invoices }: { invoices: Invoice[] }) {
   return (
     <div className="flex flex-col gap-4">
       <InvoiceFilterBar filters={filters} onFiltersChange={setFilters} />
-      <InvoiceTable invoices={filteredInvoices} />
+      <InvoiceTable
+        invoices={filteredInvoices}
+        onRowSelect={setSelectedInvoice}
+      />
+      <InvoiceDetailPanel
+        invoice={selectedInvoice}
+        onClose={() => setSelectedInvoice(null)}
+      />
     </div>
   );
 }
