@@ -1,17 +1,17 @@
 {
-  "identifier": "SER-44",
+  "identifier": "SER-45",
   "must_modify": [
-    "src/components/ui/button.tsx",
-    "src/components/ui/input.tsx",
-    "src/components/ui/card.tsx",
-    "src/components/ui/badge.tsx",
-    "src/components/ui/table.tsx",
-    "src/components/ui/skeleton.tsx",
-    "src/__tests__/ui-components-restyled.test.tsx"
+    "src/components/app-shell.tsx",
+    "src/components/nav-sidebar.tsx",
+    "src/components/mobile-sidebar.tsx",
+    "src/lib/nav-config.ts",
+    "src/__tests__/nav-sidebar-theme.test.tsx",
+    "src/__tests__/mobile-sidebar.test.tsx"
   ],
   "must_not_modify": [
-    "src/app/globals.css",
-    "src/components/app-shell.tsx",
-    "src/components/nav-sidebar.tsx"
+    "src/app/(app)/layout.tsx",
+    "src/components/page-header.tsx",
+    "src/components/breadcrumbs.tsx",
+    "src/app/(app)/error.tsx"
   ]
 }

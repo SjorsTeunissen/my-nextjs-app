@@ -32,6 +32,7 @@ vi.mock("@/app/(app)/settings/theme-actions", () => ({
 
 // --- Imports (after mocks) ---
 import { MobileSidebar } from "@/components/mobile-sidebar";
+import { navSections } from "@/lib/nav-config";
 
 describe("MobileSidebar", () => {
   afterEach(() => { cleanup(); });
@@ -71,5 +72,34 @@ describe("MobileSidebar", () => {
     );
     fireEvent.click(getByTestId("mobile-menu-button"));
     expect(getByText("user@test.com")).toBeInTheDocument();
+  });
+});
+
+describe("MobileSidebar Ink & Ledger styling", () => {
+  afterEach(() => { cleanup(); });
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockThemeState = { theme: "light", setTheme: mockSetTheme };
+  });
+
+  it("nav items match shared nav-config", () => {
+    const { getByTestId, getByText } = render(
+      <MobileSidebar userEmail="user@test.com" />
+    );
+    fireEvent.click(getByTestId("mobile-menu-button"));
+    const allItems = navSections.flatMap((s) => s.items);
+    for (const item of allItems) {
+      expect(getByText(item.label)).toBeInTheDocument();
+    }
+  });
+
+  it("nav items use warm hover styling (hover:bg-muted/50)", () => {
+    const { getByTestId, getByText } = render(
+      <MobileSidebar userEmail="user@test.com" />
+    );
+    fireEvent.click(getByTestId("mobile-menu-button"));
+    const invoicesLink = getByText("Invoices").closest("a");
+    expect(invoicesLink?.className).toContain("hover:bg-muted/50");
+    expect(invoicesLink?.className).not.toContain("hover:bg-sidebar-accent");
   });
 });

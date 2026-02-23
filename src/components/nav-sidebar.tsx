@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   FileText,
-  Settings,
   LogOut,
   Sun,
   Moon,
@@ -18,23 +17,8 @@ import { useTheme } from "next-themes";
 import { signOut } from "@/app/login/actions";
 import { saveThemePreference } from "@/app/(app)/settings/theme-actions";
 import { cn } from "@/lib/utils";
+import { navSections } from "@/lib/nav-config";
 import { SidebarSearch } from "@/components/sidebar-search";
-
-interface NavSection {
-  label: string;
-  items: { href: string; label: string; icon: React.ComponentType<{ className?: string }> }[];
-}
-
-const navSections: NavSection[] = [
-  {
-    label: "Main",
-    items: [{ href: "/invoices", label: "Invoices", icon: FileText }],
-  },
-  {
-    label: "Settings",
-    items: [{ href: "/settings", label: "Settings", icon: Settings }],
-  },
-];
 
 interface NavSidebarProps {
   userEmail: string;
@@ -62,7 +46,7 @@ export function NavSidebar({
   return (
     <aside
       data-testid="nav-sidebar"
-      className="flex h-full flex-col bg-sidebar text-sidebar-foreground"
+      className="flex h-full flex-col bg-background text-foreground"
     >
       {/* Workspace Header */}
       <div className={cn("border-b p-4", collapsed && "px-2 py-4")}>
@@ -71,7 +55,7 @@ export function NavSidebar({
             {logoUrl ? (
               <img src={logoUrl} alt={companyName} className="size-5 rounded" />
             ) : (
-              <FileText className="size-5 text-sidebar-primary" aria-hidden="true" />
+              <FileText className="size-5 text-primary" aria-hidden="true" />
             )}
           </div>
         ) : (
@@ -79,7 +63,7 @@ export function NavSidebar({
             {logoUrl && (
               <img src={logoUrl} alt={companyName} className="size-6 rounded" />
             )}
-            <h1 className="truncate text-sm font-semibold">{companyName}</h1>
+            <h1 className="truncate text-sm font-semibold tracking-tight">{companyName}</h1>
           </div>
         )}
       </div>
@@ -117,10 +101,10 @@ export function NavSidebar({
                       href={item.href}
                       aria-label={collapsed ? item.label : undefined}
                       className={cn(
-                        "flex items-center rounded-md text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                        "flex items-center rounded-md text-sm font-normal transition-colors hover:bg-muted/50",
                         collapsed ? "justify-center px-2 py-2" : "gap-3 px-3 py-2",
                         pathname.startsWith(item.href) &&
-                          "bg-sidebar-accent text-sidebar-accent-foreground"
+                          "bg-muted text-foreground font-medium"
                       )}
                     >
                       <item.icon className="size-4 shrink-0" />

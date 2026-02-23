@@ -55,6 +55,7 @@ export function AppShell({
       <ResizablePanel
         id="sidebar"
         panelRef={sidebarRef}
+        className="border-r"
         collapsible
         collapsedSize={COLLAPSED_SIZE}
         minSize={200}
@@ -74,7 +75,7 @@ export function AppShell({
         withHandle
         onDoubleClick={handleToggleCollapse}
       />
-      <ResizablePanel id="content">
+      <ResizablePanel id="content" className="overflow-auto">
         {children}
       </ResizablePanel>
     </ResizablePanelGroup>

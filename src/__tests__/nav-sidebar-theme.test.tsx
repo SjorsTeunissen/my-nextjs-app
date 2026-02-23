@@ -196,3 +196,47 @@ describe("NavSidebar collapse", () => {
     expect(onToggle).toHaveBeenCalledTimes(1);
   });
 });
+
+// --- NavSidebar Ink & Ledger Styling Tests ---
+describe("NavSidebar Ink & Ledger styling", () => {
+  afterEach(() => { cleanup(); });
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockThemeState = { theme: "light", setTheme: mockSetTheme };
+  });
+
+  const defaultProps = {
+    userEmail: "user@test.com",
+    companyName: "Acme Corp",
+    logoUrl: null as string | null,
+    collapsed: false,
+    onToggleCollapse: vi.fn(),
+  };
+
+  it("sidebar container uses canvas background (bg-background)", () => {
+    const { getByTestId } = render(<NavSidebar {...defaultProps} />);
+    const sidebar = getByTestId("nav-sidebar");
+    expect(sidebar.className).toContain("bg-background");
+    expect(sidebar.className).not.toContain("bg-sidebar");
+  });
+
+  it("nav items use warm hover styling (hover:bg-muted/50)", () => {
+    const { getByText } = render(<NavSidebar {...defaultProps} />);
+    const invoicesLink = getByText("Invoices").closest("a");
+    expect(invoicesLink?.className).toContain("hover:bg-muted/50");
+    expect(invoicesLink?.className).not.toContain("hover:bg-sidebar-accent");
+  });
+
+  it("active nav item uses bg-muted", () => {
+    // pathname is mocked to "/invoices"
+    const { getByText } = render(<NavSidebar {...defaultProps} />);
+    const invoicesLink = getByText("Invoices").closest("a");
+    expect(invoicesLink?.className).toContain("bg-muted");
+  });
+
+  it("workspace header shows company name with tracking-tight", () => {
+    const { getByText } = render(<NavSidebar {...defaultProps} />);
+    const heading = getByText("Acme Corp");
+    expect(heading.className).toContain("tracking-tight");
+  });
+});
