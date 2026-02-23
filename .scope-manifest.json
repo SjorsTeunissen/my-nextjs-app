@@ -1,0 +1,12 @@
+{
+  "identifier": "SER-43",
+  "must_modify": [
+    "src/app/globals.css",
+    "src/app/layout.tsx",
+    "src/__tests__/color-tokens.test.ts"
+  ],
+  "must_not_modify": [
+    "src/components/ui/",
+    "src/components/"
+  ]
+}
