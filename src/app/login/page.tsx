@@ -22,11 +22,11 @@ export default function LoginPage() {
   );
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[oklch(0.13_0.02_281)] px-4 dark:bg-[oklch(0.1_0.02_281)]">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,oklch(0.25_0.08_281)_0%,transparent_50%)]" />
+    <div className="flex min-h-screen items-center justify-center bg-[oklch(0.205_0.015_260)] px-4 dark:bg-[oklch(0.16_0.008_260)]">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,oklch(0.35_0.12_260)_0%,transparent_50%)]" />
 
       <div className="relative w-full max-w-sm">
-        <div className="rounded-lg border border-border/50 bg-card p-6 shadow-lg">
+        <div className="rounded-lg border border-border/50 bg-[oklch(0.995_0.003_85)] p-6 shadow-[0_1px_2px_0_oklch(0_0_0/0.04)] dark:bg-[oklch(0.20_0.010_260)]">
           <div className="mb-6 text-center">
             <h1 className="text-lg font-semibold tracking-tight text-card-foreground">
               {isSignUp ? "Create an account" : "Sign in"}
@@ -93,7 +93,7 @@ export default function LoginPage() {
               : "Don\u2019t have an account?"}{" "}
             <button
               type="button"
-              className="text-primary underline-offset-4 hover:underline"
+              className="text-[oklch(0.65_0.14_260)] underline-offset-4 hover:text-[oklch(0.70_0.14_260)] hover:underline"
               onClick={() => setIsSignUp(!isSignUp)}
             >
               {isSignUp ? "Sign In" : "Sign Up"}

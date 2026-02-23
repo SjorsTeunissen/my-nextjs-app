@@ -1,12 +1,14 @@
 {
-  "identifier": "SER-43",
+  "identifier": "SER-47",
   "must_modify": [
-    "src/app/globals.css",
-    "src/app/layout.tsx",
-    "src/__tests__/color-tokens.test.ts"
+    "src/app/login/page.tsx",
+    "src/__tests__/login-page.test.tsx"
   ],
   "must_not_modify": [
     "src/components/ui/",
-    "src/components/"
+    "src/app/(app)/",
+    "src/app/login/actions.ts",
+    ".interface-design/system.md",
+    "src/app/globals.css"
   ]
 }

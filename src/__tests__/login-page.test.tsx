@@ -34,14 +34,14 @@ describe("LoginPage", () => {
     expect(getByRole("button", { name: "Sign In" })).toBeInTheDocument();
   });
 
-  it("shows dark/gradient background with centered card layout", () => {
+  it("shows ink navy gradient background with centered card layout", () => {
     const { container } = render(<LoginPage />);
     const outerDiv = container.firstElementChild as HTMLElement;
     expect(outerDiv.className).toContain("min-h-screen");
     expect(outerDiv.className).toContain("items-center");
     expect(outerDiv.className).toContain("justify-center");
-    // Verify dark background styling
-    expect(outerDiv.className).toMatch(/bg-\[oklch/);
+    // Verify ink navy background (hue 260 from Ink & Ledger palette)
+    expect(outerDiv.className).toMatch(/bg-\[oklch\(0\.205/);
   });
 
   it("has a gradient overlay element", () => {
@@ -83,12 +83,14 @@ describe("LoginPage", () => {
     expect(errorEl.className).toContain("destructive");
   });
 
-  it("uses a card with border and shadow for the form container", () => {
+  it("uses a card with warm Surface background and Elevation-1 shadow", () => {
     const { container } = render(<LoginPage />);
     const card = container.querySelector(".rounded-lg.border");
     expect(card).toBeInTheDocument();
-    expect(card?.className).toContain("shadow-lg");
-    expect(card?.className).toContain("bg-card");
+    // Warm Surface background from Ink & Ledger palette
+    expect(card?.className).toMatch(/bg-\[oklch\(0\.995/);
+    // Elevation-1 shadow
+    expect(card?.className).toMatch(/shadow-\[0/);
   });
 
   it("has responsive padding for small screens", () => {
@@ -102,5 +104,12 @@ describe("LoginPage", () => {
     const cardWrapper = container.querySelector(".max-w-sm");
     expect(cardWrapper).toBeInTheDocument();
     expect(cardWrapper?.className).toContain("w-full");
+  });
+
+  it("sign-in/sign-up toggle link uses navy palette color", () => {
+    const { getByText } = render(<LoginPage />);
+    const toggleButton = getByText("Sign Up");
+    // Navy palette color (oklch hue 260) for visibility on dark background
+    expect(toggleButton.className).toMatch(/text-\[oklch\(0\.65/);
   });
 });
