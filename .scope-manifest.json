@@ -1,17 +1,17 @@
 {
-  "identifier": "SER-46",
+  "identifier": "SER-45",
   "must_modify": [
-    "src/app/(app)/layout.tsx",
-    "src/components/page-header.tsx",
-    "src/components/breadcrumbs.tsx",
-    "src/app/(app)/error.tsx",
-    "src/__tests__/page-header.test.tsx",
-    "src/__tests__/breadcrumbs.test.tsx"
-  ],
-  "must_not_modify": [
     "src/components/app-shell.tsx",
     "src/components/nav-sidebar.tsx",
     "src/components/mobile-sidebar.tsx",
-    "src/components/ui/breadcrumb.tsx"
+    "src/lib/nav-config.ts",
+    "src/__tests__/nav-sidebar-theme.test.tsx",
+    "src/__tests__/mobile-sidebar.test.tsx"
+  ],
+  "must_not_modify": [
+    "src/app/(app)/layout.tsx",
+    "src/components/page-header.tsx",
+    "src/app/globals.css",
+    "src/components/sidebar-search.tsx"
   ]
 }

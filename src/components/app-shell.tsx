@@ -48,7 +48,7 @@ export function AppShell({
   return (
     <ResizablePanelGroup
       orientation="horizontal"
-      className="hidden md:flex"
+      className="hidden h-dvh md:flex"
       defaultLayout={defaultLayout}
       onLayoutChanged={onLayoutChanged}
     >
@@ -61,6 +61,7 @@ export function AppShell({
         maxSize={400}
         defaultSize={240}
         onResize={handleSidebarResize}
+        className="border-r border-border"
       >
         <NavSidebar
           userEmail={userEmail}
@@ -74,7 +75,7 @@ export function AppShell({
         withHandle
         onDoubleClick={handleToggleCollapse}
       />
-      <ResizablePanel id="content">
+      <ResizablePanel id="content" className="overflow-auto">
         {children}
       </ResizablePanel>
     </ResizablePanelGroup>

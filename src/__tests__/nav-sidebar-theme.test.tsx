@@ -196,3 +196,41 @@ describe("NavSidebar collapse", () => {
     expect(onToggle).toHaveBeenCalledTimes(1);
   });
 });
+
+// --- NavSidebar Ink & Ledger Styling Tests ---
+describe("NavSidebar Ink & Ledger styling", () => {
+  afterEach(() => { cleanup(); });
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockThemeState = { theme: "light", setTheme: mockSetTheme };
+  });
+
+  const defaultProps = {
+    userEmail: "user@test.com",
+    companyName: "Acme Corp",
+    logoUrl: null as string | null,
+    collapsed: false,
+    onToggleCollapse: vi.fn(),
+  };
+
+  it("renders nav-sidebar with canvas background (bg-background)", () => {
+    const { getByTestId } = render(<NavSidebar {...defaultProps} />);
+    const sidebar = getByTestId("nav-sidebar");
+    expect(sidebar.className).toContain("bg-background");
+    expect(sidebar.className).not.toContain("bg-sidebar");
+  });
+
+  it("renders nav items with Body typography (text-sm font-normal)", () => {
+    const { getByText } = render(<NavSidebar {...defaultProps} />);
+    const invoicesLink = getByText("Invoices").closest("a");
+    expect(invoicesLink?.className).toContain("text-sm");
+    expect(invoicesLink?.className).not.toContain("font-medium");
+  });
+
+  it("displays company name with Heading-section typography", () => {
+    const { getByText } = render(<NavSidebar {...defaultProps} />);
+    const companyHeader = getByText("Acme Corp");
+    expect(companyHeader.className).toContain("font-semibold");
+    expect(companyHeader.className).toContain("tracking-tight");
+  });
+});
