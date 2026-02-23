@@ -61,7 +61,6 @@ export function AppShell({
         maxSize={400}
         defaultSize={240}
         onResize={handleSidebarResize}
-        className="border-r border-border"
       >
         <NavSidebar
           userEmail={userEmail}

@@ -91,4 +91,15 @@ describe("MobileSidebar", () => {
     const sheetContent = document.querySelector("[data-slot='sheet-content']");
     expect(sheetContent?.className).toContain("bg-background");
   });
+
+  it("applies active state with bg-accent on current pathname nav item", () => {
+    // usePathname mock returns "/invoices"
+    const { getByTestId, getByText } = render(
+      <MobileSidebar userEmail="user@test.com" />
+    );
+    fireEvent.click(getByTestId("mobile-menu-button"));
+    const invoicesLink = getByText("Invoices").closest("a");
+    expect(invoicesLink?.className).toContain("bg-accent");
+    expect(invoicesLink?.className).toContain("text-accent-foreground");
+  });
 });

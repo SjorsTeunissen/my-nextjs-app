@@ -233,4 +233,12 @@ describe("NavSidebar Ink & Ledger styling", () => {
     expect(companyHeader.className).toContain("font-semibold");
     expect(companyHeader.className).toContain("tracking-tight");
   });
+
+  it("applies active state with bg-accent on current pathname nav item", () => {
+    // usePathname mock returns "/invoices"
+    const { getByText } = render(<NavSidebar {...defaultProps} />);
+    const invoicesLink = getByText("Invoices").closest("a");
+    expect(invoicesLink?.className).toContain("bg-accent");
+    expect(invoicesLink?.className).toContain("text-accent-foreground");
+  });
 });
