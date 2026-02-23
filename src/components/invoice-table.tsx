@@ -254,7 +254,7 @@ export function InvoiceTable({ invoices, onRowSelect }: InvoiceTableProps) {
           {table.getRowModel().rows.map((row) => (
             <TableRow
               key={row.id}
-              className="group/row cursor-pointer transition-[background-color,box-shadow,transform] duration-150 hover:bg-muted/50 hover:shadow-sm hover:-translate-y-px motion-reduce:transition-none motion-reduce:hover:shadow-none motion-reduce:hover:translate-y-0"
+              className="group/row cursor-pointer transition-[color,background-color,border-color,text-decoration-color,fill,stroke,box-shadow,transform] duration-150 hover:shadow-sm hover:-translate-y-px motion-reduce:transition-none motion-reduce:hover:shadow-none motion-reduce:hover:translate-y-0"
               data-state={row.getIsSelected() ? "selected" : undefined}
               onClick={() => onRowSelect?.(row.original)}
             >
