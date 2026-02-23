@@ -1,95 +1,136 @@
-# PLAN: SER-47 -- Polish Login Page with Ink & Ledger Palette
+# PLAN: SER-44 -- Restyle UI Primitive Components
 
-## Approach
+## Context
 
-Replace the current generic purple-tinted oklch background gradient and card styling on the login page with the Ink & Ledger design system colors: ink navy gradient background, warm Surface card, and navy-tinted toggle/active states. This is a S-complexity single-page restyle touching 2 files.
+SER-43 updated `globals.css` with Ink & Ledger CSS custom properties. The Tailwind theme maps:
+- `bg-primary` -> `--primary` (navy oklch(0.40 0.12 260))
+- `bg-destructive` -> `--destructive` (stamp-red)
+- `bg-card` -> `--card` (warm surface)
+- `border` -> `--border` (warm)
+- `bg-accent` -> `--accent` (navy-subtle)
+- `bg-muted` -> `--muted` (warm tint)
+- `--radius: 0.5rem` (8px), `--radius-sm` = 4px, `--radius-md` = 6px
+
+Components already get some of the new palette for free via CSS variables. This task updates
+the Tailwind **classes** to match the specific design tokens in system.md (shadows, radii,
+heights, new badge variants, sticky headers, etc.).
+
+**Key constraint:** Do NOT modify `globals.css`. Only change UI primitive component files + test file.
 
 ## File Changes
 
-### 1. MODIFY: src/app/login/page.tsx
-
-**Pattern source:** .interface-design/system.md lines 13-48 (Color Primitives)
-
-Reference color values (DO NOT MODIFY system.md):
+### 1. MODIFY: src/components/ui/button.tsx
+**Pattern source:** .interface-design/system.md:138-139
 ```
-Canvas:           oklch(0.985 0.005 85)     /* warm off-white, hint of cream */
-Surface:          oklch(0.995 0.003 85)     /* card/elevated surface */
-Ink:              oklch(0.205 0.015 260)    /* deep navy-black -- primary text */
-Navy:             oklch(0.40 0.12 260)      /* primary actions, links, focus rings */
-Navy-hover:       oklch(0.35 0.12 260)      /* primary hover state */
-Navy-subtle:      oklch(0.95 0.02 260)      /* primary ghost/soft backgrounds */
-Border:           oklch(0.88 0.005 85)      /* standard separation -- warm-tinted */
+Radius-sm:  4px   -- buttons, inputs, badges
+```
+**Current (line 8):** Base classes include `rounded-md` (6px)
+**Action:** Change `rounded-md` to `rounded-sm` in the base cva string (line 8). This gives Radius-sm = 4px per system.md. All variant styling already references CSS vars (bg-primary = navy, bg-destructive = stamp-red) so no variant changes needed.
 
-Dark mode:
-Canvas:           oklch(0.16 0.008 260)     /* deep warm charcoal with ink undertone */
-Surface:          oklch(0.20 0.010 260)     /* card elevation */
-Navy:             oklch(0.65 0.14 260)      /* primary -- brighter for dark bg */
-Navy-hover:       oklch(0.70 0.14 260)      /* primary hover */
+### 2. MODIFY: src/components/ui/input.tsx
+**Pattern source:** .interface-design/system.md:45-47, 138-139
 ```
+Input-bg:    oklch(0.975 0.004 85)  -- slightly darker than surface, inset feel
+Input-border: oklch(0.85 0.006 85)  -- control border (mapped to --input)
+Radius-sm:   4px                     -- buttons, inputs, badges
+```
+**Current (line 11):** `rounded-md border-input bg-transparent`
+**Action:**
+- Change `rounded-md` to `rounded-sm` (Radius-sm = 4px)
+- Change `bg-transparent` to `bg-input/30` to get the warm inset Input-bg feel
 
-Card styling reference (system.md lines 161-165):
+### 3. MODIFY: src/components/ui/card.tsx
+**Pattern source:** .interface-design/system.md:122-126, 140, 162-165
 ```
-Surface background + elevation-1 shadow + standard border
-Elevation-1: shadow-[0_1px_2px_0_oklch(0_0_0/0.04)] + border
+Elevation-1:  shadow-[0_1px_2px_0_oklch(0_0_0/0.04)] + border
+Radius-md:    6px  -- cards, panels, dropdowns
+Cards:        p-4 for compact, p-6 for content
 ```
+**Current (line 10):** `rounded-lg border py-4 shadow-xs`
+**Action:**
+- Change `rounded-lg` to `rounded-md` (Radius-md = 6px)
+- Change `shadow-xs` to `shadow-[0_1px_2px_0_oklch(0_0_0/0.04)]` (Elevation-1)
+- Keep `py-4` and child `px-4` (matches compact card; consumers can override for p-6 content)
 
-**Current code (line 25):**
-```tsx
-<div className="flex min-h-screen items-center justify-center bg-[oklch(0.13_0.02_281)] px-4 dark:bg-[oklch(0.1_0.02_281)]">
+### 4. MODIFY: src/components/ui/badge.tsx
+**Pattern source:** .interface-design/system.md:32-39, 139
 ```
+Ledger-green:    oklch(0.52 0.14 155) / bg: oklch(0.95 0.03 155)
+Stamp-red:       oklch(0.55 0.20 25)  / bg: oklch(0.95 0.03 25)
+Amber:           oklch(0.65 0.16 75)  / bg: oklch(0.95 0.04 75)
+Dark variants:   Ledger-green oklch(0.62 0.12 155)/bg oklch(0.20 0.03 155)
+                 Stamp-red oklch(0.65 0.16 25)/bg oklch(0.20 0.03 25)
+                 Amber oklch(0.72 0.14 75)/bg oklch(0.20 0.03 75)
+Radius-sm:       4px -- buttons, inputs, badges
+```
+**Current (line 8):** `rounded-full` base, variants: default/secondary/destructive/outline/ghost/link
+**Action:**
+- Change `rounded-full` to `rounded-sm` (Radius-sm = 4px)
+- Add `success` variant with ledger-green tinted bg + text
+- Update `destructive` variant to use tinted bg (stamp-red-bg + stamp-red text) instead of solid bg
+- Add `warning` variant with amber tinted bg + text
+- Keep existing default, secondary, outline, ghost, link variants
 
-**Current gradient overlay (line 26):**
-```tsx
-<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,oklch(0.25_0.08_281)_0%,transparent_50%)]" />
-```
+### 5. MODIFY: src/components/ui/separator.tsx
+**Current:** Uses `bg-border` which maps to `--border` (warm border from SER-43).
+**Action:** No changes needed -- already correct via CSS variable inheritance.
 
-**Current card (line 29):**
-```tsx
-<div className="rounded-lg border border-border/50 bg-card p-6 shadow-lg">
+### 6. MODIFY: src/components/ui/table.tsx
+**Pattern source:** .interface-design/system.md:167-174, 92
 ```
+Row height: 44px (h-11)
+Header: Heading-label style (text-xs font-medium uppercase tracking-wider), sticky
+Row hover: subtle surface shift
+Selected: navy-subtle background (bg-secondary)
+```
+**Current:**
+- TableRow (line 59-60): `hover:bg-muted/50 data-[state=selected]:bg-muted border-b` (no height)
+- TableHead (line 72-73): `h-8 px-2 text-left align-middle font-medium` (no sticky/uppercase)
+- TableHeader (line 26): `[&_tr]:border-b` (no bg)
 
 **Action:**
-1. Change outer background from purple-tinted `oklch(0.13_0.02_281)` to ink navy `oklch(0.205_0.015_260)` (Ink color). Dark mode: `oklch(0.16_0.008_260)` (dark Canvas).
-2. Change radial gradient overlay from purple `oklch(0.25_0.08_281)` to navy `oklch(0.35_0.12_260)` (Navy-hover, creates subtle navy glow at top).
-3. Change card from `bg-card shadow-lg` to warm Surface `bg-[oklch(0.995_0.003_85)]` with Elevation-1 shadow `shadow-[0_1px_2px_0_oklch(0_0_0/0.04)]`. Dark mode card: `dark:bg-[oklch(0.20_0.010_260)]`. Keep `border border-border/50 rounded-lg p-6`.
-4. Change toggle link from `text-primary` to `text-[oklch(0.65_0.14_260)]` with `hover:text-[oklch(0.70_0.14_260)]` (navy tones visible on dark bg).
+- TableRow: add `h-11` for 44px row height. Change `data-[state=selected]:bg-muted` to `data-[state=selected]:bg-secondary`
+- TableHead: change `h-8` to `h-11`, add `sticky top-0 z-10 bg-background`, add `text-xs uppercase tracking-wider`, remove `text-foreground` (will inherit)
+- TableHeader: keep as-is (border on tr)
 
-### 2. MODIFY: src/__tests__/login-page.test.tsx
-
-**Current test "uses a card with border and shadow" (line 86-92):**
-```tsx
-it("uses a card with border and shadow for the form container", () => {
-  const { container } = render(<LoginPage />);
-  const card = container.querySelector(".rounded-lg.border");
-  expect(card).toBeInTheDocument();
-  expect(card?.className).toContain("shadow-lg");
-  expect(card?.className).toContain("bg-card");
-});
+### 7. MODIFY: src/components/ui/skeleton.tsx
+**Pattern source:** .interface-design/system.md:188-191
 ```
+Skeleton Loading: Pulse animation on surface-colored rectangles
+```
+**Current (line 7):** `bg-accent animate-pulse rounded-md`
+**Action:** Change `bg-accent` to `bg-muted` for warm surface tint instead of navy-subtle.
 
-**Action:**
-- Update this test to check for Elevation-1 shadow pattern (`shadow-[0`) instead of `shadow-lg`, and inline oklch background instead of `bg-card`.
-- Update the background test (line 37-45) to verify navy hue (260) specifically.
-- Add new test: "sign-in/sign-up toggle link uses navy palette color" verifying the toggle button has navy oklch class.
+### 8. MODIFY: src/__tests__/ui-components-restyled.test.tsx
+**Action:** Rewrite tests to match new classes. Import Badge and Skeleton.
 
-### Concrete test cases:
-1. "renders the sign in form with email and password fields" -- no change
-2. "shows ink navy gradient background with centered card layout" -- UPDATE: verify oklch with hue 260
-3. "has a gradient overlay element" -- no change
-4. "toggles between sign in and sign up modes" -- no change
-5. "preserves sign-in/sign-up toggle link" -- no change
-6. "renders error state with styled container" -- no change
-7. "uses a card with warm Surface background and Elevation-1 shadow" -- UPDATE
-8. "has responsive padding for small screens" -- no change
-9. "constrains card width with max-w-sm" -- no change
-10. NEW: "sign-in/sign-up toggle link uses navy palette color"
+**Concrete test cases:**
+1. "Button default uses bg-primary" (navy via CSS var)
+2. "Button uses rounded-sm" (Radius-sm)
+3. "Button preserves all variant names"
+4. "Button preserves data-slot, data-variant, data-size attributes"
+5. "Input uses rounded-sm" (was rounded-md)
+6. "Input uses bg-input/30"
+7. "Card uses Elevation-1 shadow"
+8. "Card uses rounded-md" (was rounded-lg)
+9. "CardHeader uses px-4"
+10. "CardContent uses px-4"
+11. "Badge uses rounded-sm" (was rounded-full)
+12. "Badge success variant renders"
+13. "Badge destructive variant renders"
+14. "Badge warning variant renders"
+15. "TableRow uses h-11" (44px)
+16. "TableHead uses h-11 and sticky"
+17. "TableHead uses uppercase tracking-wider"
+18. "Skeleton uses bg-muted" (was bg-accent)
+19. "Separator renders with bg-border"
 
 ## Reusable Utilities
-- `cn` from `src/lib/utils.ts:4` -- conditional class merging (not needed here)
+- `cn` from `src/lib/utils.ts:4` (clsx + tailwind-merge for conditional classes)
 
 ## Out of Scope
-- DO NOT modify `src/components/ui/*.tsx` (UI primitives -- handled by SER-44)
-- DO NOT modify `src/app/(app)/**` (app shell routes)
-- DO NOT modify `src/app/login/actions.ts` (auth logic)
-- DO NOT modify `.interface-design/system.md` (reference only)
-- DO NOT modify `src/app/globals.css` (token changes handled by SER-43)
+- DO NOT modify `src/app/globals.css` (belongs to SER-43)
+- DO NOT modify `src/components/app-shell.tsx` (belongs to SER-45)
+- DO NOT modify `src/components/nav-sidebar.tsx` (belongs to SER-45)
+- DO NOT modify any page-level components
+- DO NOT add size variants to Badge beyond what's specified

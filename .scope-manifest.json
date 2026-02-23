@@ -1,14 +1,17 @@
 {
-  "identifier": "SER-47",
+  "identifier": "SER-44",
   "must_modify": [
-    "src/app/login/page.tsx",
-    "src/__tests__/login-page.test.tsx"
+    "src/components/ui/button.tsx",
+    "src/components/ui/input.tsx",
+    "src/components/ui/card.tsx",
+    "src/components/ui/badge.tsx",
+    "src/components/ui/table.tsx",
+    "src/components/ui/skeleton.tsx",
+    "src/__tests__/ui-components-restyled.test.tsx"
   ],
   "must_not_modify": [
-    "src/components/ui/",
-    "src/app/(app)/",
-    "src/app/login/actions.ts",
-    ".interface-design/system.md",
-    "src/app/globals.css"
+    "src/app/globals.css",
+    "src/components/app-shell.tsx",
+    "src/components/nav-sidebar.tsx"
   ]
 }
