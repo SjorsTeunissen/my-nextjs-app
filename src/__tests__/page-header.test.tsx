@@ -32,4 +32,33 @@ describe("PageHeader", () => {
     // Should not have an actions container when no actions provided
     expect(header?.querySelectorAll("button")).toHaveLength(0);
   });
+
+  it("renders without breadcrumbs when prop is not provided", () => {
+    const { container } = render(<PageHeader title="Invoices" />);
+    const breadcrumbNav = container.querySelector(
+      'nav[aria-label="breadcrumb"]'
+    );
+    expect(breadcrumbNav).not.toBeInTheDocument();
+  });
+
+  it("renders breadcrumbs above the title when provided", () => {
+    const { getByText, container } = render(
+      <PageHeader
+        title="Invoices"
+        breadcrumbs={<nav aria-label="breadcrumb">Crumbs</nav>}
+      />
+    );
+    expect(getByText("Crumbs")).toBeInTheDocument();
+    expect(getByText("Invoices")).toBeInTheDocument();
+    const breadcrumbNav = container.querySelector(
+      'nav[aria-label="breadcrumb"]'
+    );
+    expect(breadcrumbNav).toBeInTheDocument();
+  });
+
+  it("applies Heading-page typography to title", () => {
+    const { getByRole } = render(<PageHeader title="Invoices" />);
+    const heading = getByRole("heading", { level: 1 });
+    expect(heading).toHaveClass("text-lg", "font-semibold", "tracking-tight");
+  });
 });
