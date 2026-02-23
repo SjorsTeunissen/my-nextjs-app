@@ -1,127 +1,113 @@
-# SER-39: Advanced Data Table with Sorting, Filtering, and Bulk Actions
+# PLAN: SER-43 - Foundation: Install dependencies & update CSS tokens
 
-## Approach
-Rewrite the invoice table component using `@tanstack/react-table` with full sorting, client-side filtering via a new filter bar component, checkbox row selection with bulk actions, and column resizing. Add a `bulkDeleteInvoices` server action. Use TDD -- write tests first, then implement.
+## Overview
 
-## Key Files to Modify
-- `src/components/invoice-table.tsx` -- full rewrite with @tanstack/react-table
-- `src/components/invoice-filter-bar.tsx` -- new component
-- `src/app/(app)/invoices/page.tsx` -- wire filter state, add onRowSelect prop
-- `src/app/(app)/invoices/actions.ts` -- add bulkDeleteInvoices
-- `src/__tests__/invoice-table.test.tsx` -- full test rewrite
-- `src/__tests__/invoice-filter-bar.test.tsx` -- new test file
+Replace all CSS custom property VALUES in `globals.css` with Ink & Ledger oklch palette from `.interface-design/system.md`. Install sonner (toast notifications) and shadcn breadcrumb component. Add `<Toaster />` to root layout. Update color token tests to validate new values.
 
-## Test Strategy
-Write tests first covering all 14 test scenarios from the AC. Tests use vitest + @testing-library/react with mocked next/navigation and server actions. The `createInvoice()` factory pattern from existing tests will be reused.
+## File Changes
 
-## Estimated Complexity
-Large (L)
+### 1. MODIFY: src/app/globals.css
+**Pattern source:** `.interface-design/system.md` lines 13-83
+```
+Light Mode Mapping (system.md primitive -> CSS variable):
+Canvas:           oklch(0.985 0.005 85)     -> --background, --sidebar
+Surface:          oklch(0.995 0.003 85)     -> --card
+Surface-raised:   oklch(1.0 0.0 0)          -> --popover
+Ink:              oklch(0.205 0.015 260)    -> --foreground, --card-foreground, --popover-foreground, --sidebar-foreground
+Ink-secondary:    oklch(0.45 0.01 260)      -> --muted-foreground
+Navy:             oklch(0.40 0.12 260)      -> --primary, --ring, --sidebar-primary, --sidebar-ring
+Navy-subtle:      oklch(0.95 0.02 260)      -> --secondary, --accent, --sidebar-accent
+Stamp-red:        oklch(0.55 0.20 25)       -> --destructive
+Border:           oklch(0.88 0.005 85)      -> --border, --sidebar-border
+Input-border:     oklch(0.85 0.006 85)      -> --input
+--muted:           oklch(0.97 0.003 85)     (slightly darker than canvas, warm tinted)
+--primary-foreground:   oklch(0.985 0.005 85)   (Canvas - light text on navy)
+--secondary-foreground: oklch(0.205 0.015 260)  (Ink)
+--accent-foreground:    oklch(0.205 0.015 260)  (Ink)
+--sidebar-primary-foreground: oklch(0.985 0.005 85)
+--sidebar-accent-foreground:  oklch(0.205 0.015 260)
 
----
-
-## Phase 1: Write Tests (TDD Red Phase)
-
-### 1a. Rewrite `src/__tests__/invoice-table.test.tsx`
-
-Tests to write:
-1. **Render table with 3 invoices** -- Table shows 3 rows with columns: checkbox, invoice number, client name, issue date, due date, total, actions
-2. **Click "Client Name" column header** -- Rows sort by client name ascending; arrow indicator shows up
-3. **Click "Client Name" column header twice** -- Rows sort descending; arrow indicator shows down
-4. **Click a table row** -- `onRowSelect` callback called with the clicked invoice
-5. **Hover action buttons** -- Quick-edit and view buttons present
-6. **Empty state** -- Shows empty state message when no invoices
-7. **Format currency** -- Total formatted as EUR
-8. **Select-all checkbox** -- All visible row checkboxes checked; bulk actions toolbar appears
-9. **Select 2 rows, click Delete selected** -- `bulkDeleteInvoices` called with 2 invoice IDs
-10. **Select 3 rows, click Export CSV** -- CSV download triggered
-11. **Rows have group/row class** -- For hover action visibility
-
-Key mocking changes:
-- Remove `useRouter`/`router.push` mock (row click now uses `onRowSelect` callback)
-- Add `onRowSelect` mock as a prop
-- Add `bulkDeleteInvoices` action mock
-- Keep `quickUpdateInvoice` mock for InvoiceQuickEdit
-
-### 1b. Create `src/__tests__/invoice-filter-bar.test.tsx`
-
-Tests to write:
-1. **Type "Acme" in client name filter** -- `onFiltersChange` called with client name filter
-2. **Set date range filter** -- `onFiltersChange` called with date range
-3. **Set amount range filter** -- `onFiltersChange` called with amount range
-4. **Click dismiss on filter badge** -- Filter removed
-5. **Click "Clear all"** -- All filters removed
-6. **Active filters shown as badges** -- Badges rendered for active filters
-
-## Phase 2: Implement Components (TDD Green Phase)
-
-### 2a. Add `bulkDeleteInvoices` to `src/app/(app)/invoices/actions.ts`
-
-Server action that accepts `ids: string[]`, deletes from invoices table using `.in('id', ids)`, calls `revalidatePath("/invoices")`.
-
-### 2b. Create `src/components/invoice-filter-bar.tsx`
-
-New client component with:
-- Props: `filters` state object, `onFiltersChange` callback
-- Client name text input (debounced 300ms)
-- Issue date range (from/to date inputs)
-- Total amount range (min/max number inputs)
-- Active filters shown as dismissible Badge chips
-- "Clear all" button when any filter active
-
-Filter state interface:
-```typescript
-interface InvoiceFilters {
-  clientName: string;
-  issueDateFrom: string;
-  issueDateTo: string;
-  totalMin: string;
-  totalMax: string;
-}
+Dark Mode Mapping:
+Canvas:           oklch(0.16 0.008 260)     -> --background, --sidebar
+Surface:          oklch(0.20 0.010 260)     -> --card
+Surface-raised:   oklch(0.24 0.010 260)     -> --popover
+Ink:              oklch(0.93 0.005 85)      -> --foreground, --card-foreground, --popover-foreground, --sidebar-foreground
+Ink-secondary:    oklch(0.72 0.008 85)      -> --muted-foreground
+Navy:             oklch(0.65 0.14 260)      -> --primary, --ring, --sidebar-primary, --sidebar-ring
+Navy-subtle:      oklch(0.22 0.03 260)      -> --secondary, --accent, --sidebar-accent
+Stamp-red:        oklch(0.65 0.16 25)       -> --destructive
+Border:           oklch(1 0 0 / 10%)        -> --border, --sidebar-border
+Input-border:     oklch(1 0 0 / 12%)        -> --input
+--muted:           oklch(0.22 0.015 260)    (navy-subtle adjacent)
+--primary-foreground:   oklch(0.16 0.008 260)   (Canvas dark)
+--secondary-foreground: oklch(0.93 0.005 85)    (Ink dark)
+--accent-foreground:    oklch(0.93 0.005 85)    (Ink dark)
+--sidebar-primary-foreground: oklch(0.16 0.008 260)
+--sidebar-accent-foreground:  oklch(0.93 0.005 85)
 ```
 
-### 2c. Rewrite `src/components/invoice-table.tsx`
+Chart colors harmonized with Ink & Ledger palette:
+```
+Light:
+--chart-1: oklch(0.40 0.12 260)   (Navy)
+--chart-2: oklch(0.52 0.14 155)   (Ledger-green)
+--chart-3: oklch(0.65 0.16 75)    (Amber)
+--chart-4: oklch(0.55 0.20 25)    (Stamp-red)
+--chart-5: oklch(0.45 0.01 260)   (Ink-secondary)
 
-Full rewrite using `useReactTable` with:
-- Column defs: checkbox (selection), invoice_number, client_name, issue_date, due_date, total, actions
-- `getCoreRowModel()`, `getSortedRowModel()`
-- `columnResizeMode: "onEnd"`
-- `enableRowSelection: true`
-- Sort toggle on header click with arrow indicators (ArrowUp/ArrowDown from lucide)
-- Row click calls `onRowSelect(invoice)` via callback prop
-- Existing hover actions (InvoiceQuickEdit + view link) preserved with `stopPropagation`
-- Bulk actions toolbar (delete selected, export CSV) when rows selected
-- Export CSV creates a Blob download with selected invoice data
-
-Props:
-```typescript
-interface InvoiceTableProps {
-  invoices: Invoice[];
-  onRowSelect?: (invoice: Invoice) => void;
-}
+Dark:
+--chart-1: oklch(0.65 0.14 260)   (Navy dark)
+--chart-2: oklch(0.62 0.12 155)   (Ledger-green dark)
+--chart-3: oklch(0.72 0.14 75)    (Amber dark)
+--chart-4: oklch(0.65 0.16 25)    (Stamp-red dark)
+--chart-5: oklch(0.72 0.008 85)   (Ink-secondary dark)
 ```
 
-### 2d. Modify `src/app/(app)/invoices/page.tsx`
+**Action:** Replace ALL color variable values in `:root` and `.dark` blocks. Keep variable NAMES unchanged. Keep `--radius`, `@theme inline` structure, animation keyframes, and `prefers-reduced-motion` untouched.
 
-- Keep Server Component for data fetching
-- Create a client wrapper component `InvoicesClient` that manages filter state
-- Import InvoiceFilterBar and wire filter state
-- Apply client-side filtering with AND logic on the invoice array
-- Pass `onRowSelect` prop to InvoiceTable
+### 2. MODIFY: src/app/layout.tsx
+**Reference:** Current layout at lines 1-28
+```tsx
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import { ThemeProvider } from "@/components/theme-provider";
+import "./globals.css";
+```
+**Action:** Import `Toaster` from `sonner` and render `<Toaster />` inside `<body>` after `<ThemeProvider>`.
 
-## Phase 3: Run Tests & Validate
+### 3. MODIFY: src/__tests__/color-tokens.test.ts
+**Reference:** Current test at lines 1-87
+```ts
+// Current test validates violet axis (270-290 hue) for VIOLET_TOKENS
+// Ink & Ledger uses navy hue ~260 which is OUTSIDE 270-290 range
+// Need to rewrite tests to validate the actual Ink & Ledger palette values
+```
 
-1. Run tests for modified files
-2. Run full test suite for regression check
-3. Run `npx tsc --noEmit` for type checking
-4. Run `npx next build` to verify production build
-5. Run linter
+**Concrete test cases:**
+1. "light :root --primary matches Navy oklch(0.40 0.12 260)"
+2. "light :root --background matches Canvas oklch(0.985 0.005 85)"
+3. "light :root --destructive matches Stamp-red oklch(0.55 0.20 25)"
+4. "light :root --border matches Border oklch(0.88 0.005 85)"
+5. "dark .dark --primary matches dark Navy oklch(0.65 0.14 260)"
+6. "dark .dark --background matches dark Canvas oklch(0.16 0.008 260)"
+7. "dark .dark --destructive matches dark Stamp-red oklch(0.65 0.16 25)"
+8. "@theme inline structure preserved"
+9. "animation keyframes untouched"
+10. "prefers-reduced-motion query untouched"
 
-## Phase 4: Quality Validation
+**Test approach:** Replace the violet axis validation with exact value matching for each token against the Ink & Ledger palette. The `extractOklchTokens` helper needs to also handle `oklch(L C H / alpha%)` syntax for dark mode border/input tokens.
 
-Run applicable Tier 1 frontend skills on changed files.
+## Installation Steps (before code changes)
+1. `npm install sonner` -- toast notification library
+2. `npx shadcn@latest add sonner` -- shadcn sonner wrapper component
+3. `npx shadcn@latest add breadcrumb` -- shadcn breadcrumb component
 
-## Phase 5: Commit & PR
+## Reusable Utilities
+- `cn` from `src/lib/utils.ts:4` (not directly needed for this issue)
 
-1. Commit with conventional format
-2. Push branch
-3. Open PR targeting main
+## Out of Scope
+- DO NOT modify `src/components/ui/*.tsx` (belongs to SER-44)
+- DO NOT modify `src/components/*.tsx` (belongs to later issues)
+- DO NOT change CSS variable NAMES -- only VALUES
+- DO NOT modify animation keyframes or prefers-reduced-motion query
+- DO NOT modify `@theme inline` block structure
