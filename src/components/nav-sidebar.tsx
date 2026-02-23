@@ -11,70 +11,127 @@ import {
   Moon,
   PanelLeftClose,
   PanelLeftOpen,
+  ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
 import { signOut } from "@/app/login/actions";
 import { saveThemePreference } from "@/app/(app)/settings/theme-actions";
 import { cn } from "@/lib/utils";
+import { SidebarSearch } from "@/components/sidebar-search";
 
-const navItems = [
-  { href: "/invoices", label: "Invoices", icon: FileText },
-  { href: "/settings", label: "Settings", icon: Settings },
+interface NavSection {
+  label: string;
+  items: { href: string; label: string; icon: React.ComponentType<{ className?: string }> }[];
+}
+
+const navSections: NavSection[] = [
+  {
+    label: "Main",
+    items: [{ href: "/invoices", label: "Invoices", icon: FileText }],
+  },
+  {
+    label: "Settings",
+    items: [{ href: "/settings", label: "Settings", icon: Settings }],
+  },
 ];
 
-export function NavSidebar({ userEmail }: { userEmail: string }) {
-  const [collapsed, setCollapsed] = useState(false);
-  const [hovered, setHovered] = useState(false);
+interface NavSidebarProps {
+  userEmail: string;
+  companyName: string;
+  logoUrl: string | null;
+  collapsed: boolean;
+  onToggleCollapse: () => void;
+}
+
+export function NavSidebar({
+  userEmail,
+  companyName,
+  logoUrl,
+  collapsed,
+  onToggleCollapse,
+}: NavSidebarProps) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
 
-  // Show expanded content when not collapsed, or when collapsed but hovered
-  const showExpanded = !collapsed || hovered;
+  const toggleSection = (label: string) => {
+    setCollapsedSections((prev) => ({ ...prev, [label]: !prev[label] }));
+  };
 
   return (
     <aside
       data-testid="nav-sidebar"
-      className={cn(
-        "hidden md:flex h-dvh flex-col border-r bg-sidebar text-sidebar-foreground",
-        showExpanded ? "w-60" : "w-16"
-      )}
-      onMouseEnter={() => {
-        if (collapsed) setHovered(true);
-      }}
-      onMouseLeave={() => {
-        setHovered(false);
-      }}
+      className="flex h-full flex-col bg-sidebar text-sidebar-foreground"
     >
-      <div className={cn("border-b p-4", !showExpanded && "px-2")}>
-        {showExpanded ? (
-          <h1 className="truncate text-sm font-semibold">Invoice Generator</h1>
-        ) : (
+      {/* Workspace Header */}
+      <div className={cn("border-b p-4", collapsed && "px-2 py-4")}>
+        {collapsed ? (
           <div className="flex justify-center">
-            <FileText className="size-5 text-sidebar-primary" aria-hidden="true" />
+            {logoUrl ? (
+              <img src={logoUrl} alt={companyName} className="size-5 rounded" />
+            ) : (
+              <FileText className="size-5 text-sidebar-primary" aria-hidden="true" />
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            {logoUrl && (
+              <img src={logoUrl} alt={companyName} className="size-6 rounded" />
+            )}
+            <h1 className="truncate text-sm font-semibold">{companyName}</h1>
           </div>
         )}
       </div>
+
+      {/* Search */}
+      {!collapsed && <SidebarSearch />}
+
+      {/* Nav Sections */}
       <nav className="flex-1 space-y-1 p-2">
-        {navItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            aria-label={!showExpanded ? item.label : undefined}
-            className={cn(
-              "flex items-center rounded-md text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-              showExpanded ? "gap-3 px-3 py-2" : "justify-center px-2 py-2",
-              pathname.startsWith(item.href) &&
-                "bg-sidebar-accent text-sidebar-accent-foreground"
+        {navSections.map((section) => (
+          <div key={section.label}>
+            {!collapsed && (
+              <button
+                type="button"
+                onClick={() => toggleSection(section.label)}
+                aria-expanded={!collapsedSections[section.label]}
+                className="flex w-full items-center justify-between rounded-md px-2 py-1 text-xs font-medium text-muted-foreground hover:text-foreground"
+              >
+                {section.label}
+                <ChevronDown
+                  aria-hidden="true"
+                  className={cn(
+                    "size-3 transition-transform duration-200",
+                    collapsedSections[section.label] && "-rotate-90"
+                  )}
+                />
+              </button>
             )}
-          >
-            <item.icon className="size-4 shrink-0" />
-            {showExpanded && item.label}
-          </Link>
+            {!collapsedSections[section.label] &&
+              section.items.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-label={collapsed ? item.label : undefined}
+                  className={cn(
+                    "flex items-center rounded-md text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                    collapsed ? "justify-center px-2 py-2" : "gap-3 px-3 py-2",
+                    pathname.startsWith(item.href) &&
+                      "bg-sidebar-accent text-sidebar-accent-foreground"
+                  )}
+                >
+                  <item.icon className="size-4 shrink-0" />
+                  {!collapsed && item.label}
+                </Link>
+              ))}
+          </div>
         ))}
       </nav>
-      <div className={cn("border-t p-4", !showExpanded && "p-2")}>
-        {showExpanded ? (
+
+      {/* Footer */}
+      <div className={cn("border-t p-4", collapsed && "p-2")}>
+        {!collapsed ? (
           <>
             <p className="mb-2 truncate text-xs text-muted-foreground">
               {userEmail}
@@ -143,21 +200,21 @@ export function NavSidebar({ userEmail }: { userEmail: string }) {
         <Button
           data-testid="sidebar-collapse-toggle"
           variant="ghost"
-          size={showExpanded ? "sm" : "icon-sm"}
+          size={!collapsed ? "sm" : "icon-sm"}
           className={cn(
-            showExpanded
+            !collapsed
               ? "mt-2 w-full justify-start"
               : "mx-auto mt-2 flex"
           )}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={onToggleCollapse}
         >
           {collapsed ? (
             <PanelLeftOpen className="size-4" />
           ) : (
             <PanelLeftClose className="size-4" />
           )}
-          {showExpanded && (collapsed ? "Expand" : "Collapse")}
+          {!collapsed && (collapsed ? "Expand" : "Collapse")}
         </Button>
       </div>
     </aside>

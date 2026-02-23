@@ -20,6 +20,11 @@ vi.mock("next-themes", () => ({
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/invoices",
+  useRouter: () => ({ push: vi.fn() }),
+}));
+
+vi.mock("@/app/(app)/invoices/actions", () => ({
+  searchInvoices: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock("@/app/login/actions", () => ({
@@ -68,19 +73,22 @@ describe("NavSidebar theme toggle", () => {
     mockThemeState = { theme: "light", setTheme: mockSetTheme };
   });
 
-  it("renders theme toggle button in sidebar footer between email and Sign Out", () => {
-    const { getByTestId, getByText } = render(
-      <NavSidebar userEmail="user@test.com" />
-    );
-    expect(getByText("user@test.com")).toBeInTheDocument();
-    expect(getByText("Sign Out")).toBeInTheDocument();
-    const toggleButton = getByTestId("theme-toggle");
-    expect(toggleButton).toBeInTheDocument();
+  const defaultProps = {
+    userEmail: "user@test.com",
+    companyName: "Acme Corp",
+    logoUrl: null as string | null,
+    collapsed: false,
+    onToggleCollapse: vi.fn(),
+  };
+
+  it("renders theme toggle button in sidebar footer", () => {
+    const { getByTestId } = render(<NavSidebar {...defaultProps} />);
+    expect(getByTestId("theme-toggle")).toBeInTheDocument();
   });
 
   it("calls setTheme('dark') and saveThemePreference('dark') when clicking toggle in light mode", () => {
     mockThemeState = { theme: "light", setTheme: mockSetTheme };
-    const { getByTestId } = render(<NavSidebar userEmail="user@test.com" />);
+    const { getByTestId } = render(<NavSidebar {...defaultProps} />);
     fireEvent.click(getByTestId("theme-toggle"));
     expect(mockSetTheme).toHaveBeenCalledWith("dark");
     expect(mockSaveThemePreference).toHaveBeenCalledWith("dark");
@@ -88,7 +96,7 @@ describe("NavSidebar theme toggle", () => {
 
   it("calls setTheme('light') and saveThemePreference('light') when clicking toggle in dark mode", () => {
     mockThemeState = { theme: "dark", setTheme: mockSetTheme };
-    const { getByTestId } = render(<NavSidebar userEmail="user@test.com" />);
+    const { getByTestId } = render(<NavSidebar {...defaultProps} />);
     fireEvent.click(getByTestId("theme-toggle"));
     expect(mockSetTheme).toHaveBeenCalledWith("light");
     expect(mockSaveThemePreference).toHaveBeenCalledWith("light");
@@ -96,14 +104,14 @@ describe("NavSidebar theme toggle", () => {
 
   it("shows Sun icon and 'Light' label when theme is light", () => {
     mockThemeState = { theme: "light", setTheme: mockSetTheme };
-    const { getByTestId } = render(<NavSidebar userEmail="user@test.com" />);
+    const { getByTestId } = render(<NavSidebar {...defaultProps} />);
     const button = getByTestId("theme-toggle");
     expect(button.textContent).toContain("Light");
   });
 
   it("shows Moon icon and 'Dark' label when theme is dark", () => {
     mockThemeState = { theme: "dark", setTheme: mockSetTheme };
-    const { getByTestId } = render(<NavSidebar userEmail="user@test.com" />);
+    const { getByTestId } = render(<NavSidebar {...defaultProps} />);
     const button = getByTestId("theme-toggle");
     expect(button.textContent).toContain("Dark");
   });
@@ -117,83 +125,74 @@ describe("NavSidebar collapse", () => {
     mockThemeState = { theme: "light", setTheme: mockSetTheme };
   });
 
+  const defaultProps = {
+    userEmail: "user@test.com",
+    companyName: "Acme Corp",
+    logoUrl: null as string | null,
+    collapsed: false,
+    onToggleCollapse: vi.fn(),
+  };
+
   it("renders collapse toggle button", () => {
-    const { getByTestId } = render(<NavSidebar userEmail="user@test.com" />);
+    const { getByTestId } = render(<NavSidebar {...defaultProps} />);
     expect(getByTestId("sidebar-collapse-toggle")).toBeInTheDocument();
   });
 
-  it("shows nav labels when expanded (default state)", () => {
-    const { getByText } = render(<NavSidebar userEmail="user@test.com" />);
+  it("shows nav labels when expanded (collapsed=false)", () => {
+    const { getByText, getAllByText } = render(<NavSidebar {...defaultProps} />);
     expect(getByText("Invoices")).toBeInTheDocument();
-    expect(getByText("Settings")).toBeInTheDocument();
+    // "Settings" appears as both section header and nav link
+    const settingsElements = getAllByText("Settings");
+    expect(settingsElements.length).toBeGreaterThanOrEqual(2);
   });
 
-  it("hides nav labels when collapsed", () => {
-    const { getByTestId, queryByText } = render(
-      <NavSidebar userEmail="user@test.com" />
+  it("hides nav labels when collapsed (collapsed=true)", () => {
+    const { queryByText } = render(
+      <NavSidebar {...defaultProps} collapsed={true} />
     );
-    fireEvent.click(getByTestId("sidebar-collapse-toggle"));
     expect(queryByText("Invoices")).not.toBeInTheDocument();
     expect(queryByText("Settings")).not.toBeInTheDocument();
   });
 
-  it("restores nav labels when expanded again", () => {
-    const { getByTestId, getByText, queryByText } = render(
-      <NavSidebar userEmail="user@test.com" />
-    );
-    // Collapse
-    fireEvent.click(getByTestId("sidebar-collapse-toggle"));
-    expect(queryByText("Invoices")).not.toBeInTheDocument();
-    // Expand
-    fireEvent.click(getByTestId("sidebar-collapse-toggle"));
-    expect(getByText("Invoices")).toBeInTheDocument();
-    expect(getByText("Settings")).toBeInTheDocument();
+  it("shows workspace header with company name when expanded", () => {
+    const { getByText } = render(<NavSidebar {...defaultProps} />);
+    expect(getByText("Acme Corp")).toBeInTheDocument();
   });
 
-  it("shows nav labels on hover when collapsed", () => {
-    const { getByTestId, queryByText, getByText } = render(
-      <NavSidebar userEmail="user@test.com" />
+  it("shows workspace header with logo when logoUrl is provided", () => {
+    const { getByAltText } = render(
+      <NavSidebar {...defaultProps} logoUrl="/logo.png" />
     );
-    // Collapse
-    fireEvent.click(getByTestId("sidebar-collapse-toggle"));
-    expect(queryByText("Invoices")).not.toBeInTheDocument();
-    // Hover over sidebar
-    const sidebar = getByTestId("nav-sidebar");
-    fireEvent.mouseEnter(sidebar);
-    expect(getByText("Invoices")).toBeInTheDocument();
-    expect(getByText("Settings")).toBeInTheDocument();
+    const logo = getByAltText("Acme Corp");
+    expect(logo).toBeInTheDocument();
+    expect(logo).toHaveAttribute("src", "/logo.png");
   });
 
-  it("hides nav labels when mouse leaves collapsed sidebar", () => {
-    const { getByTestId, queryByText, getByText } = render(
-      <NavSidebar userEmail="user@test.com" />
-    );
-    // Collapse
-    fireEvent.click(getByTestId("sidebar-collapse-toggle"));
-    // Hover then leave
-    const sidebar = getByTestId("nav-sidebar");
-    fireEvent.mouseEnter(sidebar);
-    expect(getByText("Invoices")).toBeInTheDocument();
-    fireEvent.mouseLeave(sidebar);
-    expect(queryByText("Invoices")).not.toBeInTheDocument();
+  it("shows Main and Settings section headers", () => {
+    const { getByText, getAllByText } = render(<NavSidebar {...defaultProps} />);
+    expect(getByText("Main")).toBeInTheDocument();
+    // "Settings" appears as both section header button and nav link
+    const settingsElements = getAllByText("Settings");
+    expect(settingsElements.length).toBeGreaterThanOrEqual(2);
   });
 
-  it("does not change collapsed state on hover (hover is transient)", () => {
-    const { getByTestId, queryByText } = render(
-      <NavSidebar userEmail="user@test.com" />
-    );
-    // Collapse
-    fireEvent.click(getByTestId("sidebar-collapse-toggle"));
-    // Hover and leave
-    const sidebar = getByTestId("nav-sidebar");
-    fireEvent.mouseEnter(sidebar);
-    fireEvent.mouseLeave(sidebar);
-    // Still collapsed (labels hidden)
+  it("collapses section when clicking section header", () => {
+    const { getByText, queryByText, getAllByText } = render(<NavSidebar {...defaultProps} />);
+    // Click "Main" section header to collapse it
+    fireEvent.click(getByText("Main"));
+    // "Invoices" nav item should be hidden
     expect(queryByText("Invoices")).not.toBeInTheDocument();
-    // Toggle still says "Expand sidebar"
-    expect(getByTestId("sidebar-collapse-toggle")).toHaveAttribute(
-      "aria-label",
-      "Expand sidebar"
+    // "Settings" section should still show its nav link
+    const settingsElements = getAllByText("Settings");
+    expect(settingsElements.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("calls onToggleCollapse when collapse button is clicked", () => {
+    const onToggle = vi.fn();
+    const { getByTestId } = render(
+      <NavSidebar {...defaultProps} onToggleCollapse={onToggle} />
     );
+    fireEvent.click(getByTestId("sidebar-collapse-toggle"));
+    expect(onToggle).toHaveBeenCalledTimes(1);
   });
 });
