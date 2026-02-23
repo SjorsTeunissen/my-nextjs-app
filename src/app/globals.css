@@ -137,3 +137,53 @@
 [data-panel-group-direction="horizontal"] > [data-resize-handle][data-resize-handle-active] {
   background-color: var(--primary);
 }
+
+/* Sidebar section expand animation */
+.section-expand {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 200ms ease;
+}
+
+@starting-style {
+  .section-expand {
+    grid-template-rows: 0fr;
+  }
+}
+
+/* Sheet panel custom animation timings (300ms open, 200ms close) */
+[data-slot="sheet-content"][data-state="open"] {
+  animation-duration: 300ms;
+}
+
+[data-slot="sheet-content"][data-state="closed"] {
+  animation-duration: 200ms;
+}
+
+/* Filter badge entrance animation */
+@keyframes filter-badge-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+[data-slot="badge"] {
+  animation: filter-badge-in 150ms ease-out;
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

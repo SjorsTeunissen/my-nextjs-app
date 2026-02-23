@@ -55,7 +55,7 @@ export function InvoiceDetailPanel({
     <Sheet open={!!invoice} onOpenChange={(open) => !open && onClose()}>
       <SheetContent
         side="right"
-        className="w-[480px] sm:max-w-[480px] p-0 flex flex-col"
+        className="w-[480px] sm:max-w-[480px] p-0 flex flex-col data-[state=open]:duration-300 data-[state=closed]:duration-200 data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0"
         data-testid="invoice-detail-panel"
         showCloseButton={false}
       >
