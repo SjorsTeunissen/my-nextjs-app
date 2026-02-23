@@ -258,3 +258,15 @@ export async function getNextInvoiceNumber() {
   const nextNumber = currentNumber + 1;
   return `INV-${nextNumber.toString().padStart(3, "0")}`;
 }
+
+export async function searchInvoices(query: string) {
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .from("invoices")
+    .select("id, invoice_number, client_name, total")
+    .or(`client_name.ilike.%${query}%,invoice_number.ilike.%${query}%`)
+    .limit(5);
+
+  return data ?? [];
+}
