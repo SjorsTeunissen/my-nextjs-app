@@ -1,124 +1,117 @@
-# PLAN: SER-48 -- Restyle Invoice Filter Bar, Table & Skeletons
+# PLAN: SER-50 -- Restructure Settings with Sidebar Navigation
 
 ## Summary
-Redesign the invoice list page with compact filter triggers, 44px ledger-line table rows, warm hover states, empty state with CTA, matching skeleton loading, and toast notifications for bulk delete actions.
 
-## Scope Files (MUST modify)
-- `src/app/(app)/invoices/page.tsx`
-- `src/app/(app)/invoices/invoices-client.tsx`
-- `src/components/invoice-filter-bar.tsx`
-- `src/components/invoice-table.tsx`
-- `src/components/invoice-table-skeleton.tsx`
-- `src/app/(app)/invoices/loading.tsx`
-- `src/__tests__/invoice-filter-bar.test.tsx`
-- `src/__tests__/invoice-table.test.tsx`
+Restructure the settings page from a single long scrolling form into a sidebar-navigation layout with section links. All sections remain in the DOM for FormData submission -- only CSS controls visibility. Add toast on save success/error.
 
-## MUST NOT modify
-- `src/components/invoice-detail-panel.tsx` (SER-52)
-- `src/components/invoice-quick-edit.tsx` (SER-52)
-- `src/components/invoice-form.tsx` (SER-49)
-- `src/app/(app)/invoices/new/page.tsx` (SER-49)
-- `src/app/(app)/invoices/[id]/page.tsx` (SER-49)
+## Scope Files
 
-## Implementation Steps
+| File | Action |
+|------|--------|
+| `src/app/(app)/settings/settings-form.tsx` | Modify (major) |
+| `src/app/(app)/settings/page.tsx` | Modify (minor) |
+| `src/app/(app)/settings/loading.tsx` | Modify (rewrite) |
+| `src/__tests__/settings-page.test.tsx` | Modify (extend) |
 
-### Step 1: Restyle `src/components/invoice-filter-bar.tsx`
-**Current:** Five inline Input fields (DebouncedInput for client name, 2x date, 2x number) + active filter badges below.
-**Target:** Compact ghost-button triggers that open popovers for each filter group. Active filters shown as removable pill badges with x button.
+**MUST NOT modify:** `src/components/invoice-*.tsx`, `src/components/app-shell.tsx`, `src/components/nav-sidebar.tsx`
 
-Changes:
-1. Replace five inline Input fields with three compact ghost buttons:
-   - "Client" button -> opens Popover with DebouncedInput for client name search
-   - "Date" button -> opens Popover with From/To date inputs
-   - "Amount" button -> opens Popover with Min/Max number inputs
-2. Active buttons get a visual indicator (dot or count) when their filter is active
-3. Active filters displayed below as pill badges with `rounded-full` styling and X dismiss button
-4. Keep "Clear all" ghost button when filters are active
-5. Use existing `Popover`, `PopoverTrigger`, `PopoverContent` from `@/components/ui/popover`
-6. Keep `DebouncedInput` internal component unchanged (used for client name)
-7. Import `User`, `Calendar`, `DollarSign` icons from lucide-react for button labels
+## Approach
 
-### Step 2: Restyle `src/components/invoice-table.tsx`
-**Current:** Table with shadow+translate hover, basic empty state (no CTA), no toast on bulk delete.
-**Target:** Warm surface-shift hover, empty state with CTA button, toast on bulk actions.
+### 1. `settings-form.tsx` -- Add sidebar navigation within the form
 
-Changes:
-1. Replace row hover classes: remove `hover:shadow-sm hover:-translate-y-px` etc. -- let the base TableRow `hover:bg-muted/50` handle it. Keep `group/row cursor-pointer` and `transition-colors duration-150`.
-2. Empty state: add a "Create Invoice" primary CTA `<Button asChild><Link href="/invoices/new">` below the existing text
-3. Import `toast` from `sonner` and add toast notifications in `handleBulkDelete`:
-   - On success: `toast.success(\`${count} invoice${count === 1 ? "" : "s"} deleted\`)`
-   - On error: `toast.error("Failed to delete invoices")`
-4. Bulk action bar: minor styling refinement with `rounded-sm` and consistent spacing
-5. All @tanstack/react-table logic, columns, sorting, selection, CSV export remain unchanged
+**Current state:** Single scrolling form with 5 sections (Company Information, Address, Contact, Banking, Tax) inside a `<form>`, plus a separate Logo section outside the form. Inline success/error banners for feedback.
 
-### Step 3: Restyle `src/components/invoice-table-skeleton.tsx`
-**Current:** 6 columns of skeleton cells, no checkbox column, generic widths.
-**Target:** Match restyled table layout with checkbox column and correct proportions.
+**Target state:** Two-column layout:
+- Left sidebar (`<nav>`): Section links (Company, Address, Contact, Banking, Tax, Logo). Active section highlighted with `bg-primary/10` (navy-subtle).
+- Right content area: Only the active section is visible.
+- All sections always rendered in DOM using Tailwind `hidden` class on inactive sections.
+- Single `<form>` wraps Company through Tax sections (unchanged -- Logo upload is already separate).
+- Toast notification via `sonner` on save success/error, replacing the inline alert banners.
 
-Changes:
-1. Add a checkbox column skeleton (small 4x4 rounded square) as first column
-2. Adjust skeleton widths to better match actual data column proportions
-3. Rows already render at 44px via base TableRow h-11
-4. Keep 5-row skeleton count
+**Implementation details:**
 
-### Step 4: Update `src/app/(app)/invoices/loading.tsx`
-**Current:** PageHeader skeleton + InvoiceTableSkeleton.
-**Target:** Add filter bar skeleton placeholders between header and table.
+1. Add `useState<string>` for `activeSection` (default: `"company"`).
+2. Define a `sections` constant array:
+   ```ts
+   const sections = [
+     { id: "company", label: "Company" },
+     { id: "address", label: "Address" },
+     { id: "contact", label: "Contact" },
+     { id: "banking", label: "Banking" },
+     { id: "tax", label: "Tax" },
+     { id: "logo", label: "Logo" },
+   ] as const;
+   ```
+3. Layout: `flex` container with left sidebar (fixed width ~200px) and right content area (flex-1).
+4. Sidebar nav: `<nav>` with `<button>` elements for each section. Active button gets `bg-primary/10 text-primary font-medium`. Inactive buttons get `text-muted-foreground hover:text-foreground hover:bg-muted`.
+5. Wrap each section's content in a `<Card>` with `<CardHeader>` containing a semantic `<h2>` heading (NOT `<CardTitle>` which renders a `<div>`), and `<CardContent>` containing the fields. The `<h2>` uses `Heading-section` typography (`text-sm font-semibold tracking-tight`). This preserves the existing test that queries `container.querySelectorAll("h2")`.
+6. Each section container gets: `className={cn(activeSection !== sectionId && "hidden")}`.
+7. The `<form>` wraps Company through Tax sections + Save button. Logo section remains outside the form (already the case).
+8. Replace inline success/error banners with `useEffect` watching `saveState`:
+   ```ts
+   useEffect(() => {
+     if (saveState?.success) toast.success("Settings saved successfully.");
+     if (saveState?.error) toast.error(saveState.error);
+   }, [saveState]);
+   ```
+9. Save button inside the form, visible regardless of active section.
+10. Section heading stays as `<h2>` (semantic HTML), placed inside `<CardHeader>` with `Heading-section` typography. Do NOT use `<CardTitle>` since it renders a `<div>` which would break existing `h2` test queries.
+11. Remove `<Separator>` elements (cards provide visual separation). Update the existing separator count test to verify Card components exist instead (see section 4).
 
-Changes:
-1. Add filter bar skeleton: row of 3 small rounded skeleton rectangles (matching the 3 ghost button triggers) between header skeleton and table skeleton
-2. Keep existing PageHeader skeleton structure
-3. Keep InvoiceTableSkeleton reference
+**FormData safety:** Tailwind's `hidden` class applies `display: none`. HTML form submission includes all successful controls regardless of CSS display property -- only the `disabled` attribute prevents submission. All 13 form inputs remain enabled in the DOM, so `saveCompanySettings` receives all FormData fields unchanged.
 
-### Step 5: Update `src/app/(app)/invoices/invoices-client.tsx`
-**Current:** Wrapper with filter bar + table + detail panel in `flex flex-col gap-4`.
-**Target:** Minimal changes -- ensure layout composes correctly with new compact filter bar.
+### 2. `page.tsx` -- Keep minimal, adjust layout
 
-Changes:
-1. Adjust gap spacing if needed (gap-3 instead of gap-4 for tighter composition)
-2. No functional changes
+- Keep `PageHeader` with title "Settings" for consistency.
+- No structural changes needed. The `SettingsForm` handles its own sidebar layout internally.
 
-### Step 6: Update `src/app/(app)/invoices/page.tsx`
-**Current:** PageHeader + InvoicesClient.
-**Target:** No structural changes needed.
+### 3. `loading.tsx` -- Rewrite skeleton for sidebar + content layout
 
-Changes:
-1. No changes required -- existing structure works with restyled child components
+- Match the new two-column layout structure.
+- Left sidebar: 6 skeleton bars (one per section link), each ~200px wide.
+- Right content: Card skeleton with form field skeletons inside.
+- Keep `PageHeader` skeleton (title bar) at the top.
 
-### Step 7: Update test files
+### 4. `settings-page.test.tsx` -- Extend tests
 
-#### `src/__tests__/invoice-filter-bar.test.tsx`
-1. Update debounce test: click "Client" button to open popover, then find input inside popover and type
-2. Update date range test: click "Date" button to open popover, find date inputs inside
-3. Update amount range test: click "Amount" button to open popover, find number inputs inside
-4. Keep active filter badge tests (badge rendering, remove filter, clear all -- same behavior)
+Add new tests for sidebar navigation behavior while keeping all existing tests passing:
 
-#### `src/__tests__/invoice-table.test.tsx`
-1. Update empty state test: verify "Create Invoice" CTA link exists alongside text
-2. Add test: "shows toast.success on bulk delete success"
-3. Add test: "shows toast.error on bulk delete error"
-4. Keep all existing sorting, selection, CSV export, hover-action tests unchanged
+1. **Sidebar nav links rendered:** Assert 6 navigation buttons (Company, Address, Contact, Banking, Tax, Logo) exist.
+2. **Default active section:** "Company" section is visible on initial render, others are hidden.
+3. **Section switching:** Click "Address" nav button, verify Address section visible, Company section hidden.
+4. **Active state styling:** Active nav button has navy-subtle background class.
+5. **All fields always in DOM:** All 13 labeled inputs present regardless of which section is active (use `getByLabelText` for each).
+6. **Single form wraps all form sections:** `querySelector("form")` exists, contains all 13 inputs.
+7. **Toast on save:** Mock `sonner` toast module, trigger save action state change, verify `toast.success` called.
 
-## Design Token Application
-- Ghost buttons: `variant="ghost" size="sm"` with lucide icons
-- Popovers: existing PopoverContent with `bg-popover` + shadow + border (Elevation-2)
-- Filter pills: `rounded-full` Badge variant with X button (Radius-full per system.md)
-- Table row hover: warm surface shift via base TableRow `hover:bg-muted/50`
-- Empty state: centered with muted FileText icon + descriptive text + primary CTA button
-- Toast: `sonner` `toast.success()` / `toast.error()` -- Toaster already in root layout
+**Existing tests compatibility:**
+- `getByLabelText` tests: Work unchanged -- finds inputs regardless of CSS `hidden`.
+- `h2` heading test (line 142-156): Headings stay as `<h2>` elements inside `<CardHeader>` (NOT `<CardTitle>` which is a `<div>`). Full heading text preserved ("Company Information", "Address", etc.). Test passes unchanged.
+- Separator count test (line 158-165): **Must be updated.** Separators are removed (cards replace them). Replace this assertion with a card count check: `container.querySelectorAll('[data-slot="card"]')` should have 6 cards (one per section).
+- Save button test: Passes unchanged.
+- Logo tests: Pass unchanged.
 
-## Dependencies
-- `sonner` -- already installed, `<Toaster />` already in root layout
-- `@/components/ui/popover` -- already exists
-- `@/components/ui/badge` -- already exists with pill-friendly variants
-- No new packages or components needed
+**Note on toast `useEffect`:** Each `saveCompanySettings` call returns a new `{ success: true }` object literal, so React sees a new reference on each save and the `useEffect` fires correctly. This is an acceptable trade-off -- no counter/timestamp mechanism needed.
 
-## Validation
+## Design Tokens Applied
+
+- Active sidebar link: `bg-primary/10` (maps to navy-subtle per system.md)
+- Cards: existing `Card` component with Elevation-1 shadow
+- Section headings: Semantic `<h2>` inside `<CardHeader>` with `text-sm font-semibold tracking-tight` (Heading-section)
+- Sidebar text: `text-sm` for nav items
+- Layout gap: `gap-6` between sidebar and content (Group spacing = 24px)
+- Sidebar width: `w-48` (192px, fits section labels comfortably)
+
+## Constraints
+
+- Zero server action modifications
+- All 13 FormData fields always in DOM (never disabled)
+- No animation on section switch
+- No files outside scope modified
+- No added comments or type annotations to unchanged code
+
+## Verification
+
 - `npx vitest run` -- all tests pass
-- Filter bar renders as 3 compact ghost buttons
-- Popovers open on button click with correct filter inputs inside
-- Active filters shown as removable pill badges below
-- Table rows at 44px with warm hover (surface shift)
-- Empty state shows icon + text + "Create Invoice" CTA
-- Skeleton matches restyled page layout with filter bar placeholders
-- Bulk delete shows success/error toast
+- All 13 form fields present in DOM regardless of active section
+- `saveCompanySettings` receives unchanged FormData
