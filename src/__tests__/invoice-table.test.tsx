@@ -1,12 +1,14 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import "@testing-library/jest-dom/vitest";
-import { render, cleanup, fireEvent } from "@testing-library/react";
+import { render, cleanup, fireEvent, waitFor } from "@testing-library/react";
 import type { Database } from "@/lib/types/database";
 
-const { mockRefresh, mockBulkDelete } = vi.hoisted(() => ({
+const { mockRefresh, mockBulkDelete, mockToastSuccess, mockToastError } = vi.hoisted(() => ({
   mockRefresh: vi.fn(),
   mockBulkDelete: vi.fn().mockResolvedValue({ success: true }),
+  mockToastSuccess: vi.fn(),
+  mockToastError: vi.fn(),
 }));
 
 vi.mock("next/link", () => ({
@@ -32,6 +34,13 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/app/(app)/invoices/actions", () => ({
   quickUpdateInvoice: vi.fn().mockResolvedValue({ success: true }),
   bulkDeleteInvoices: mockBulkDelete,
+}));
+
+vi.mock("sonner", () => ({
+  toast: {
+    success: mockToastSuccess,
+    error: mockToastError,
+  },
 }));
 
 import { InvoiceTable } from "@/components/invoice-table";
@@ -73,7 +82,7 @@ describe("InvoiceTable", () => {
     vi.clearAllMocks();
   });
 
-  it("renders empty state with icon and descriptive text when no invoices", () => {
+  it("renders empty state with icon, descriptive text, and CTA link", () => {
     const { getByText, container } = render(
       <InvoiceTable invoices={[]} />
     );
@@ -84,6 +93,10 @@ describe("InvoiceTable", () => {
 
     const svg = container.querySelector("svg");
     expect(svg).toBeInTheDocument();
+
+    const ctaLink = getByText("Create Invoice").closest("a");
+    expect(ctaLink).toBeInTheDocument();
+    expect(ctaLink).toHaveAttribute("href", "/invoices/new");
 
     const table = container.querySelector("table");
     expect(table).not.toBeInTheDocument();
@@ -225,6 +238,49 @@ describe("InvoiceTable", () => {
     expect(mockBulkDelete).toHaveBeenCalledWith(
       expect.arrayContaining(["inv-1", "inv-2"])
     );
+  });
+
+  it("shows toast.success on bulk delete success", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    mockBulkDelete.mockResolvedValueOnce({ success: true });
+
+    const invoices = [
+      createInvoice({ id: "inv-1" }),
+      createInvoice({ id: "inv-2" }),
+    ];
+
+    const { container, getByText } = render(
+      <InvoiceTable invoices={invoices} />
+    );
+
+    const selectAllCheckbox = container.querySelector("thead [role=checkbox]");
+    fireEvent.click(selectAllCheckbox!);
+    fireEvent.click(getByText("Delete selected"));
+
+    await waitFor(() => {
+      expect(mockToastSuccess).toHaveBeenCalledWith("2 invoices deleted");
+    });
+  });
+
+  it("shows toast.error on bulk delete error", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    mockBulkDelete.mockResolvedValueOnce({ error: "Something went wrong" });
+
+    const invoices = [
+      createInvoice({ id: "inv-1" }),
+    ];
+
+    const { container, getByText } = render(
+      <InvoiceTable invoices={invoices} />
+    );
+
+    const checkboxes = container.querySelectorAll("tbody [role=checkbox]");
+    fireEvent.click(checkboxes[0]!);
+    fireEvent.click(getByText("Delete selected"));
+
+    await waitFor(() => {
+      expect(mockToastError).toHaveBeenCalledWith("Failed to delete invoices");
+    });
   });
 
   it("triggers CSV export when Export CSV is clicked", () => {

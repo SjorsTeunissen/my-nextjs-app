@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import "@testing-library/jest-dom/vitest";
-import { render, cleanup, fireEvent, act } from "@testing-library/react";
+import { render, cleanup, fireEvent, screen, act } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import {
   InvoiceFilterBar,
   type InvoiceFilters,
@@ -28,14 +29,28 @@ describe("InvoiceFilterBar", () => {
     vi.useRealTimers();
   });
 
-  it("calls onFiltersChange with client name after debounce", () => {
+  it("renders compact filter trigger buttons", () => {
+    render(
+      <InvoiceFilterBar filters={emptyFilters} onFiltersChange={vi.fn()} />
+    );
+
+    expect(screen.getByText("Client")).toBeInTheDocument();
+    expect(screen.getByText("Date")).toBeInTheDocument();
+    expect(screen.getByText("Amount")).toBeInTheDocument();
+  });
+
+  it("calls onFiltersChange with client name after debounce", async () => {
     const onFiltersChange = vi.fn();
 
-    const { getByPlaceholderText } = render(
+    render(
       <InvoiceFilterBar filters={emptyFilters} onFiltersChange={onFiltersChange} />
     );
 
-    const input = getByPlaceholderText("Client name...");
+    await act(async () => {
+      fireEvent.click(screen.getByText("Client"));
+    });
+
+    const input = screen.getByPlaceholderText("Client name...");
     fireEvent.change(input, { target: { value: "Acme" } });
 
     act(() => {
@@ -47,14 +62,18 @@ describe("InvoiceFilterBar", () => {
     );
   });
 
-  it("calls onFiltersChange with date range", () => {
+  it("calls onFiltersChange with date range", async () => {
     const onFiltersChange = vi.fn();
 
-    const { getByLabelText } = render(
+    render(
       <InvoiceFilterBar filters={emptyFilters} onFiltersChange={onFiltersChange} />
     );
 
-    fireEvent.change(getByLabelText("From date"), {
+    await act(async () => {
+      fireEvent.click(screen.getByText("Date"));
+    });
+
+    fireEvent.change(screen.getByLabelText("From date"), {
       target: { value: "2024-01-01" },
     });
 
@@ -63,14 +82,18 @@ describe("InvoiceFilterBar", () => {
     );
   });
 
-  it("calls onFiltersChange with amount range", () => {
+  it("calls onFiltersChange with amount range", async () => {
     const onFiltersChange = vi.fn();
 
-    const { getByPlaceholderText } = render(
+    render(
       <InvoiceFilterBar filters={emptyFilters} onFiltersChange={onFiltersChange} />
     );
 
-    fireEvent.change(getByPlaceholderText("Min"), {
+    await act(async () => {
+      fireEvent.click(screen.getByText("Amount"));
+    });
+
+    fireEvent.change(screen.getByPlaceholderText("Min"), {
       target: { value: "1000" },
     });
 
@@ -89,12 +112,12 @@ describe("InvoiceFilterBar", () => {
       totalMax: "",
     };
 
-    const { getByText } = render(
+    render(
       <InvoiceFilterBar filters={activeFilters} onFiltersChange={onFiltersChange} />
     );
 
-    expect(getByText(/Acme/)).toBeInTheDocument();
-    expect(getByText(/2024-01-01/)).toBeInTheDocument();
+    expect(screen.getByText(/Acme/)).toBeInTheDocument();
+    expect(screen.getByText(/2024-01-01/)).toBeInTheDocument();
   });
 
   it("removes individual filter when dismiss badge is clicked", () => {
@@ -107,11 +130,11 @@ describe("InvoiceFilterBar", () => {
       totalMax: "",
     };
 
-    const { getAllByLabelText } = render(
+    render(
       <InvoiceFilterBar filters={activeFilters} onFiltersChange={onFiltersChange} />
     );
 
-    const dismissButtons = getAllByLabelText("Remove filter");
+    const dismissButtons = screen.getAllByLabelText("Remove filter");
     fireEvent.click(dismissButtons[0]!);
 
     expect(onFiltersChange).toHaveBeenCalledWith(
@@ -129,11 +152,11 @@ describe("InvoiceFilterBar", () => {
       totalMax: "2000",
     };
 
-    const { getByText } = render(
+    render(
       <InvoiceFilterBar filters={activeFilters} onFiltersChange={onFiltersChange} />
     );
 
-    fireEvent.click(getByText("Clear all"));
+    fireEvent.click(screen.getByText("Clear all"));
 
     expect(onFiltersChange).toHaveBeenCalledWith(emptyFilters);
   });

@@ -55,7 +55,7 @@ export function InvoicesClient({ invoices }: { invoices: Invoice[] }) {
   );
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       <InvoiceFilterBar filters={filters} onFiltersChange={setFilters} />
       <InvoiceTable
         invoices={filteredInvoices}

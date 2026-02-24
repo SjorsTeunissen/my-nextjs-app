@@ -6,9 +6,16 @@ export default function InvoicesLoading() {
     <>
       <header className="flex items-center justify-between pb-4">
         <Skeleton className="h-7 w-24 animate-pulse" />
-        <Skeleton className="h-8 w-28 animate-pulse rounded-md" />
+        <Skeleton className="h-8 w-28 animate-pulse rounded-sm" />
       </header>
-      <InvoiceTableSkeleton />
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-1.5">
+          <Skeleton className="h-7 w-16 animate-pulse rounded-sm" />
+          <Skeleton className="h-7 w-14 animate-pulse rounded-sm" />
+          <Skeleton className="h-7 w-20 animate-pulse rounded-sm" />
+        </div>
+        <InvoiceTableSkeleton />
+      </div>
     </>
   );
 }

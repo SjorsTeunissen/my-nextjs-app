@@ -12,7 +12,8 @@ import {
   type SortingState,
   type RowSelectionState,
 } from "@tanstack/react-table";
-import { FileText, ExternalLink, ArrowUp, ArrowDown, Trash2, Download } from "lucide-react";
+import { FileText, ExternalLink, ArrowUp, ArrowDown, Trash2, Download, Plus } from "lucide-react";
+import { toast } from "sonner";
 import {
   Table,
   TableBody,
@@ -170,7 +171,12 @@ export function InvoiceTable({ invoices, onRowSelect }: InvoiceTableProps) {
     );
     if (!confirmed) return;
     const ids = selectedRows.map((row) => row.original.id);
-    await bulkDeleteInvoices(ids);
+    const result = await bulkDeleteInvoices(ids);
+    if (result.error) {
+      toast.error("Failed to delete invoices");
+      return;
+    }
+    toast.success(`${count} invoice${count === 1 ? "" : "s"} deleted`);
     setRowSelection({});
     router.refresh();
   }
@@ -184,9 +190,15 @@ export function InvoiceTable({ invoices, onRowSelect }: InvoiceTableProps) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <FileText className="text-muted-foreground/50 mb-3 size-10" />
-        <p className="text-muted-foreground text-sm text-pretty">
+        <p className="text-muted-foreground mb-4 text-sm text-pretty">
           No invoices yet. Create your first invoice to get started.
         </p>
+        <Button size="sm" asChild>
+          <Link href="/invoices/new">
+            <Plus className="size-4" />
+            Create Invoice
+          </Link>
+        </Button>
       </div>
     );
   }
@@ -194,7 +206,7 @@ export function InvoiceTable({ invoices, onRowSelect }: InvoiceTableProps) {
   return (
     <div>
       {hasSelection && (
-        <div className="flex items-center gap-2 mb-2 p-2 rounded-md bg-muted">
+        <div className="flex items-center gap-2 mb-2 p-2 rounded-sm bg-muted">
           <span className="text-sm text-muted-foreground">
             {selectedRows.length} selected
           </span>
@@ -254,7 +266,7 @@ export function InvoiceTable({ invoices, onRowSelect }: InvoiceTableProps) {
           {table.getRowModel().rows.map((row) => (
             <TableRow
               key={row.id}
-              className="group/row cursor-pointer transition-[color,background-color,border-color,text-decoration-color,fill,stroke,box-shadow,transform] duration-150 hover:shadow-sm hover:-translate-y-px motion-reduce:transition-none motion-reduce:hover:shadow-none motion-reduce:hover:translate-y-0"
+              className="group/row cursor-pointer transition-colors duration-150"
               data-state={row.getIsSelected() ? "selected" : undefined}
               onClick={() => onRowSelect?.(row.original)}
             >
