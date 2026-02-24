@@ -1,12 +1,18 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import "@testing-library/jest-dom/vitest";
-import { render, cleanup } from "@testing-library/react";
+import { render, cleanup, fireEvent } from "@testing-library/react";
 
-// Mock the server actions
 vi.mock("@/app/(app)/settings/actions", () => ({
   saveCompanySettings: vi.fn(),
   uploadLogo: vi.fn(),
+}));
+
+vi.mock("sonner", () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
 }));
 
 import { SettingsForm } from "@/app/(app)/settings/page";
@@ -155,13 +161,13 @@ describe("SettingsForm", () => {
     expect(headingTexts).toContain("Logo");
   });
 
-  it("renders separators between sections", () => {
+  it("wraps sections in cards", () => {
     const { container } = render(
       <SettingsForm data={createSettings()} />
     );
 
-    const separators = container.querySelectorAll('[data-slot="separator"]');
-    expect(separators.length).toBe(6);
+    const cards = container.querySelectorAll('[data-slot="card"]');
+    expect(cards.length).toBe(6);
   });
 
   it("validates file type on logo upload input", () => {
@@ -184,5 +190,96 @@ describe("SettingsForm", () => {
       (btn) => btn.textContent === "Upload"
     );
     expect(uploadButton).toBeTruthy();
+  });
+
+  it("renders sidebar navigation with all section links", () => {
+    const { getByRole } = render(
+      <SettingsForm data={createSettings()} />
+    );
+
+    const nav = getByRole("navigation");
+    const buttons = nav.querySelectorAll("button");
+    const labels = Array.from(buttons).map((btn) => btn.textContent);
+
+    expect(labels).toEqual(["Company", "Address", "Contact", "Banking", "Tax", "Logo"]);
+  });
+
+  it("shows Company section by default and hides others", () => {
+    const { container, getByLabelText } = render(
+      <SettingsForm data={createSettings()} />
+    );
+
+    expect(getByLabelText("Company Name").closest('[class*="hidden"]')).toBeNull();
+
+    const addressInput = getByLabelText("Address Line 1");
+    expect(addressInput.closest(".hidden")).not.toBeNull();
+  });
+
+  it("switches visible section when sidebar nav is clicked", () => {
+    const { getByRole, getByLabelText } = render(
+      <SettingsForm data={createSettings()} />
+    );
+
+    const nav = getByRole("navigation");
+    const addressButton = Array.from(nav.querySelectorAll("button")).find(
+      (btn) => btn.textContent === "Address"
+    )!;
+
+    fireEvent.click(addressButton);
+
+    expect(getByLabelText("Address Line 1").closest(".hidden")).toBeNull();
+    expect(getByLabelText("Company Name").closest(".hidden")).not.toBeNull();
+  });
+
+  it("highlights active section in sidebar with primary styling", () => {
+    const { getByRole } = render(
+      <SettingsForm data={createSettings()} />
+    );
+
+    const nav = getByRole("navigation");
+    const companyButton = Array.from(nav.querySelectorAll("button")).find(
+      (btn) => btn.textContent === "Company"
+    )!;
+
+    expect(companyButton.className).toContain("bg-primary/10");
+    expect(companyButton.className).toContain("text-primary");
+  });
+
+  it("keeps all 13 form fields in DOM regardless of active section", () => {
+    const { getByLabelText, getByRole } = render(
+      <SettingsForm data={createSettings()} />
+    );
+
+    const nav = getByRole("navigation");
+    const taxButton = Array.from(nav.querySelectorAll("button")).find(
+      (btn) => btn.textContent === "Tax"
+    )!;
+    fireEvent.click(taxButton);
+
+    expect(getByLabelText("Company Name")).toBeInTheDocument();
+    expect(getByLabelText("Address Line 1")).toBeInTheDocument();
+    expect(getByLabelText("Address Line 2")).toBeInTheDocument();
+    expect(getByLabelText("City")).toBeInTheDocument();
+    expect(getByLabelText("Postal Code")).toBeInTheDocument();
+    expect(getByLabelText("Country")).toBeInTheDocument();
+    expect(getByLabelText("Email")).toBeInTheDocument();
+    expect(getByLabelText("Phone")).toBeInTheDocument();
+    expect(getByLabelText("Bank Name")).toBeInTheDocument();
+    expect(getByLabelText("IBAN")).toBeInTheDocument();
+    expect(getByLabelText("BIC")).toBeInTheDocument();
+    expect(getByLabelText("VAT Number")).toBeInTheDocument();
+    expect(getByLabelText("Default Tax Rate (%)")).toBeInTheDocument();
+  });
+
+  it("wraps all form inputs in a single form element", () => {
+    const { container } = render(
+      <SettingsForm data={createSettings()} />
+    );
+
+    const form = container.querySelector("form");
+    expect(form).not.toBeNull();
+
+    const formInputs = form!.querySelectorAll("input[name]");
+    expect(formInputs.length).toBe(13);
   });
 });
