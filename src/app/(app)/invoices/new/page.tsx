@@ -1,6 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { getNextInvoiceNumber } from "../actions";
 import { InvoiceForm } from "@/components/invoice-form";
+import type { BreadcrumbItemData } from "@/components/breadcrumbs";
+
+const breadcrumbs: BreadcrumbItemData[] = [
+  { label: "Invoices", href: "/invoices" },
+  { label: "New Invoice" },
+];
 
 export default async function NewInvoicePage() {
   const supabase = await createClient();
@@ -18,6 +24,7 @@ export default async function NewInvoicePage() {
     <InvoiceForm
       defaultInvoiceNumber={defaultInvoiceNumber}
       defaultTaxRate={defaultTaxRate}
+      breadcrumbs={breadcrumbs}
     />
   );
 }

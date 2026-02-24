@@ -123,4 +123,19 @@ describe("LineItemsEditor", () => {
 
     expect(getByText("Tax (21%)")).toBeInTheDocument();
   });
+
+  it("table body rows use 44px height (h-11)", () => {
+    const items = [createItem()];
+    const { container } = render(
+      <LineItemsEditor items={items} taxRate={21} onChange={vi.fn()} />
+    );
+
+    const tbody = container.querySelector("tbody");
+    const rows = tbody?.querySelectorAll("tr");
+    expect(rows).toBeDefined();
+    expect(rows!.length).toBeGreaterThanOrEqual(1);
+    rows!.forEach((row) => {
+      expect(row.className).toContain("h-11");
+    });
+  });
 });

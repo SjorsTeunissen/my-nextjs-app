@@ -10,6 +10,10 @@ vi.mock("@/app/(app)/invoices/actions", () => ({
   updateInvoice: vi.fn(),
 }));
 
+vi.mock("sonner", () => ({
+  toast: { success: vi.fn(), error: vi.fn() },
+}));
+
 import { InvoiceForm } from "@/components/invoice-form";
 
 type Invoice = Database["public"]["Tables"]["invoices"]["Row"];
@@ -175,5 +179,55 @@ describe("InvoiceForm", () => {
     // Should have one Description input
     const descriptionInputs = getAllByLabelText("Description");
     expect(descriptionInputs).toHaveLength(1);
+  });
+
+  it("wraps each form section in a Card component", () => {
+    const { container } = render(
+      <InvoiceForm defaultInvoiceNumber="INV-001" defaultTaxRate={21} />
+    );
+
+    const cards = container.querySelectorAll('[data-slot="card"]');
+    expect(cards).toHaveLength(3);
+  });
+
+  it("renders section headings with Heading-section typography", () => {
+    const { getByText } = render(
+      <InvoiceForm defaultInvoiceNumber="INV-001" defaultTaxRate={21} />
+    );
+
+    const invoiceDetails = getByText("Invoice Details");
+    const clientDetails = getByText("Client Details");
+    const lineItems = getByText("Line Items");
+
+    expect(invoiceDetails.className).toContain("font-semibold");
+    expect(invoiceDetails.className).toContain("tracking-tight");
+    expect(clientDetails.className).toContain("font-semibold");
+    expect(clientDetails.className).toContain("tracking-tight");
+    expect(lineItems.className).toContain("font-semibold");
+    expect(lineItems.className).toContain("tracking-tight");
+  });
+
+  it("uses 24px spacing between cards (space-y-6)", () => {
+    const { container } = render(
+      <InvoiceForm defaultInvoiceNumber="INV-001" defaultTaxRate={21} />
+    );
+
+    const form = container.querySelector("form");
+    expect(form?.className).toContain("space-y-6");
+  });
+
+  it("renders breadcrumbs when provided", () => {
+    const { getByText } = render(
+      <InvoiceForm
+        defaultInvoiceNumber="INV-001"
+        defaultTaxRate={21}
+        breadcrumbs={[
+          { label: "Invoices", href: "/invoices" },
+          { label: "New Invoice" },
+        ]}
+      />
+    );
+
+    expect(getByText("Invoices")).toBeInTheDocument();
   });
 });
