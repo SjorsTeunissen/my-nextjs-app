@@ -127,4 +127,28 @@ describe("SidebarSearch", () => {
     expect((input as HTMLInputElement).value).toBe("");
     expect(queryByText("INV-001")).not.toBeInTheDocument();
   });
+
+  it("search input uses Input-bg styling", () => {
+    const { getByPlaceholderText } = render(<SidebarSearch />);
+    const input = getByPlaceholderText("Search invoices...");
+    expect(input.className).toContain("bg-[oklch(0.975_0.004_85)]");
+  });
+
+  it("search results dropdown uses Elevation-2 shadow and Surface-raised bg", async () => {
+    mockSearchInvoices.mockResolvedValue([
+      { id: "1", invoice_number: "INV-001", client_name: "Acme Corp", total: 1500 },
+    ]);
+
+    const { getByPlaceholderText, container } = render(<SidebarSearch />);
+    const input = getByPlaceholderText("Search invoices...");
+
+    fireEvent.change(input, { target: { value: "INV" } });
+
+    await waitFor(() => {
+      const resultsList = container.querySelector("ul");
+      expect(resultsList).toBeInTheDocument();
+      expect(resultsList?.className).toContain("shadow-[0_2px_8px_0_oklch(0_0_0/0.06)]");
+      expect(resultsList?.className).toContain("bg-popover");
+    }, { timeout: 1000 });
+  });
 });

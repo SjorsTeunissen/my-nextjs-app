@@ -157,4 +157,26 @@ describe("CommandPalette", () => {
       expect(screen.queryByPlaceholderText("Search pages...")).not.toBeInTheDocument();
     });
   });
+
+  it("uses Elevation-3 shadow on dialog", async () => {
+    render(<CommandPalette />);
+    openPalette();
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText("Search pages...")).toBeInTheDocument();
+    });
+    const dialogContent = document.querySelector("[data-slot='dialog-content']");
+    expect(dialogContent).toBeInTheDocument();
+    expect(dialogContent?.className).toContain("shadow-[0_4px_16px_0_oklch(0_0_0/0.08)]");
+  });
+
+  it("uses Surface-raised background on dialog", async () => {
+    render(<CommandPalette />);
+    openPalette();
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText("Search pages...")).toBeInTheDocument();
+    });
+    const dialogContent = document.querySelector("[data-slot='dialog-content']");
+    expect(dialogContent).toBeInTheDocument();
+    expect(dialogContent?.className).toContain("bg-popover");
+  });
 });
