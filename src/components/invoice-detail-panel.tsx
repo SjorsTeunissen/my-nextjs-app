@@ -21,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn, formatCurrency } from "@/lib/utils";
 import { getInvoiceWithLineItems } from "@/app/(app)/invoices/actions";
 import type { Database } from "@/lib/types/database";
@@ -61,7 +62,7 @@ export function InvoiceDetailPanel({
       >
         <SheetHeader className="border-b px-6 py-4">
           <div className="flex items-center justify-between">
-            <SheetTitle>{invoice?.invoice_number}</SheetTitle>
+            <SheetTitle className="text-lg font-semibold tracking-tight">{invoice?.invoice_number}</SheetTitle>
             <Button
               variant="ghost"
               size="icon"
@@ -81,92 +82,112 @@ export function InvoiceDetailPanel({
           <ScrollArea className="flex-1 overflow-auto">
             <div className="px-6 py-4 space-y-6">
               {/* Invoice Header */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-medium">{invoice.client_name}</h3>
-                  <Badge data-testid="invoice-total-badge" variant="secondary">
-                    {invoice.total != null ? formatCurrency(invoice.total) : ""}
-                  </Badge>
-                </div>
-                <div className="text-sm text-muted-foreground space-y-1">
-                  {invoice.issue_date && (
-                    <p>
-                      Issued:{" "}
-                      {new Date(invoice.issue_date).toLocaleDateString("nl-NL")}
-                    </p>
-                  )}
-                  {invoice.due_date && (
-                    <p>
-                      Due:{" "}
-                      {new Date(invoice.due_date).toLocaleDateString("nl-NL")}
-                    </p>
-                  )}
-                </div>
-              </div>
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-semibold tracking-tight">{invoice.client_name}</CardTitle>
+                    <Badge data-testid="invoice-total-badge" variant="secondary">
+                      {invoice.total != null ? formatCurrency(invoice.total) : ""}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-muted-foreground space-y-1">
+                    {invoice.issue_date && (
+                      <p className="flex items-center gap-2">
+                        <span className="text-xs">Issued:</span>
+                        <span className="text-sm font-medium tabular-nums">
+                          {new Date(invoice.issue_date).toLocaleDateString("nl-NL")}
+                        </span>
+                      </p>
+                    )}
+                    {invoice.due_date && (
+                      <p className="flex items-center gap-2">
+                        <span className="text-xs">Due:</span>
+                        <span className="text-sm font-medium tabular-nums">
+                          {new Date(invoice.due_date).toLocaleDateString("nl-NL")}
+                        </span>
+                      </p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Client Details */}
-              <div className="space-y-2">
-                <h4 className="text-sm font-medium">Client Details</h4>
-                <div className="text-sm text-muted-foreground space-y-1">
-                  {invoice.client_address && <p>{invoice.client_address}</p>}
-                  {(invoice.client_postal_code || invoice.client_city) && (
-                    <p>
-                      {[invoice.client_postal_code, invoice.client_city]
-                        .filter(Boolean)
-                        .join(" ")}
-                    </p>
-                  )}
-                  {invoice.client_country && <p>{invoice.client_country}</p>}
-                  {invoice.client_email && <p>{invoice.client_email}</p>}
-                  {invoice.client_phone && <p>{invoice.client_phone}</p>}
-                </div>
-              </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-xs font-medium uppercase tracking-wider">Client Details</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    {invoice.client_address && <p>{invoice.client_address}</p>}
+                    {(invoice.client_postal_code || invoice.client_city) && (
+                      <p>
+                        {[invoice.client_postal_code, invoice.client_city]
+                          .filter(Boolean)
+                          .join(" ")}
+                      </p>
+                    )}
+                    {invoice.client_country && <p>{invoice.client_country}</p>}
+                    {invoice.client_email && <p>{invoice.client_email}</p>}
+                    {invoice.client_phone && <p>{invoice.client_phone}</p>}
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Line Items */}
               {lineItems.length > 0 && (
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium">Line Items</h4>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Description</TableHead>
-                        <TableHead className="text-right">Qty</TableHead>
-                        <TableHead className="text-right">Unit Price</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {lineItems.map((item) => (
-                        <TableRow key={item.id}>
-                          <TableCell>{item.description}</TableCell>
-                          <TableCell className="text-right">
-                            {item.quantity}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {item.unit_price != null
-                              ? formatCurrency(item.unit_price)
-                              : ""}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {item.amount != null
-                              ? formatCurrency(item.amount)
-                              : ""}
-                          </TableCell>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-xs font-medium uppercase tracking-wider">Line Items</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Description</TableHead>
+                          <TableHead className="text-right">Qty</TableHead>
+                          <TableHead className="text-right">Unit Price</TableHead>
+                          <TableHead className="text-right">Amount</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                      </TableHeader>
+                      <TableBody>
+                        {lineItems.map((item) => (
+                          <TableRow key={item.id}>
+                            <TableCell>{item.description}</TableCell>
+                            <TableCell className="text-right text-sm font-medium tabular-nums">
+                              {item.quantity}
+                            </TableCell>
+                            <TableCell className="text-right text-sm font-medium tabular-nums">
+                              {item.unit_price != null
+                                ? formatCurrency(item.unit_price)
+                                : ""}
+                            </TableCell>
+                            <TableCell className="text-right text-sm font-medium tabular-nums">
+                              {item.amount != null
+                                ? formatCurrency(item.amount)
+                                : ""}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
               )}
 
               {/* Notes */}
               {invoice.notes && (
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium">Notes</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {invoice.notes}
-                  </p>
-                </div>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-xs font-medium uppercase tracking-wider">Notes</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      {invoice.notes}
+                    </p>
+                  </CardContent>
+                </Card>
               )}
 
               {/* Edit Button */}
