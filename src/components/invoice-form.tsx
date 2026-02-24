@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
   LineItemsEditor,
   type LineItemRow,
@@ -12,6 +13,7 @@ import {
 import { createInvoice, updateInvoice } from "@/app/(app)/invoices/actions";
 import type { Database } from "@/lib/types/database";
 import { PageHeader } from "@/components/page-header";
+import { Breadcrumbs, type BreadcrumbItemData } from "@/components/breadcrumbs";
 
 type Invoice = Database["public"]["Tables"]["invoices"]["Row"];
 type LineItemDb = Database["public"]["Tables"]["invoice_line_items"]["Row"];
@@ -21,6 +23,8 @@ interface InvoiceFormProps {
   lineItems?: LineItemDb[];
   defaultInvoiceNumber: string;
   defaultTaxRate: number;
+  breadcrumbs?: BreadcrumbItemData[];
+  extraActions?: React.ReactNode;
 }
 
 export function InvoiceForm({
@@ -28,6 +32,8 @@ export function InvoiceForm({
   lineItems,
   defaultInvoiceNumber,
   defaultTaxRate,
+  breadcrumbs,
+  extraActions,
 }: InvoiceFormProps) {
   const isEditing = !!invoice;
 
@@ -84,12 +90,10 @@ export function InvoiceForm({
   });
 
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    setError(null);
 
     const formData = {
       invoice_number: invoiceNumber,
@@ -120,160 +124,169 @@ export function InvoiceForm({
     }
 
     if (result?.error) {
-      setError(result.error);
+      toast.error(result.error);
       setSaving(false);
+    } else {
+      toast.success("Invoice saved successfully");
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <PageHeader
         title={isEditing ? "Edit Invoice" : "New Invoice"}
+        breadcrumbs={breadcrumbs && <Breadcrumbs items={breadcrumbs} />}
         actions={
-          <Button type="submit" disabled={saving}>
-            {saving ? "Saving..." : "Save"}
-          </Button>
+          <>
+            {extraActions}
+            <Button type="submit" disabled={saving}>
+              {saving ? "Saving..." : "Save"}
+            </Button>
+          </>
         }
       />
 
-      {error && (
-        <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
-          {error}
-        </div>
-      )}
-
       {/* Invoice Details */}
-      <section>
-        <h2 className="text-sm font-medium text-muted-foreground">Invoice Details</h2>
-        <Separator className="mt-2 mb-3" />
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="invoice_number">Invoice Number</Label>
-            <Input
-              id="invoice_number"
-              value={invoiceNumber}
-              onChange={(e) => setInvoiceNumber(e.target.value)}
-            />
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-semibold tracking-tight">Invoice Details</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="invoice_number">Invoice Number</Label>
+              <Input
+                id="invoice_number"
+                value={invoiceNumber}
+                onChange={(e) => setInvoiceNumber(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="issue_date">Issue Date</Label>
+              <Input
+                id="issue_date"
+                type="date"
+                value={issueDate}
+                onChange={(e) => setIssueDate(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="due_date">Due Date</Label>
+              <Input
+                id="due_date"
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="tax_rate">Tax Rate (%)</Label>
+              <Input
+                id="tax_rate"
+                type="number"
+                step="0.01"
+                value={taxRate}
+                onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
+              />
+            </div>
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="issue_date">Issue Date</Label>
-            <Input
-              id="issue_date"
-              type="date"
-              value={issueDate}
-              onChange={(e) => setIssueDate(e.target.value)}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="due_date">Due Date</Label>
-            <Input
-              id="due_date"
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="tax_rate">Tax Rate (%)</Label>
-            <Input
-              id="tax_rate"
-              type="number"
-              step="0.01"
-              value={taxRate}
-              onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
-            />
-          </div>
-        </div>
-      </section>
+        </CardContent>
+      </Card>
 
       {/* Client Details */}
-      <section>
-        <h2 className="text-sm font-medium text-muted-foreground">Client Details</h2>
-        <Separator className="mt-2 mb-3" />
-        <div className="space-y-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="client_name">Client Name</Label>
-            <Input
-              id="client_name"
-              value={clientName}
-              onChange={(e) => setClientName(e.target.value)}
-            />
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-semibold tracking-tight">Client Details</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="client_name">Client Name</Label>
+              <Input
+                id="client_name"
+                value={clientName}
+                onChange={(e) => setClientName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="client_address">Address</Label>
+              <Input
+                id="client_address"
+                value={clientAddress}
+                onChange={(e) => setClientAddress(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="client_city">City</Label>
+                <Input
+                  id="client_city"
+                  value={clientCity}
+                  onChange={(e) => setClientCity(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="client_postal_code">Postal Code</Label>
+                <Input
+                  id="client_postal_code"
+                  value={clientPostalCode}
+                  onChange={(e) => setClientPostalCode(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="client_country">Country</Label>
+                <Input
+                  id="client_country"
+                  value={clientCountry}
+                  onChange={(e) => setClientCountry(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="client_email">Email</Label>
+                <Input
+                  id="client_email"
+                  type="email"
+                  value={clientEmail}
+                  onChange={(e) => setClientEmail(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="client_phone">Phone</Label>
+                <Input
+                  id="client_phone"
+                  type="tel"
+                  value={clientPhone}
+                  onChange={(e) => setClientPhone(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="client_vat_number">VAT Number</Label>
+                <Input
+                  id="client_vat_number"
+                  value={clientVatNumber}
+                  onChange={(e) => setClientVatNumber(e.target.value)}
+                />
+              </div>
+            </div>
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="client_address">Address</Label>
-            <Input
-              id="client_address"
-              value={clientAddress}
-              onChange={(e) => setClientAddress(e.target.value)}
-            />
-          </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="client_city">City</Label>
-              <Input
-                id="client_city"
-                value={clientCity}
-                onChange={(e) => setClientCity(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="client_postal_code">Postal Code</Label>
-              <Input
-                id="client_postal_code"
-                value={clientPostalCode}
-                onChange={(e) => setClientPostalCode(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="client_country">Country</Label>
-              <Input
-                id="client_country"
-                value={clientCountry}
-                onChange={(e) => setClientCountry(e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="client_email">Email</Label>
-              <Input
-                id="client_email"
-                type="email"
-                value={clientEmail}
-                onChange={(e) => setClientEmail(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="client_phone">Phone</Label>
-              <Input
-                id="client_phone"
-                type="tel"
-                value={clientPhone}
-                onChange={(e) => setClientPhone(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="client_vat_number">VAT Number</Label>
-              <Input
-                id="client_vat_number"
-                value={clientVatNumber}
-                onChange={(e) => setClientVatNumber(e.target.value)}
-              />
-            </div>
-          </div>
-        </div>
-      </section>
+        </CardContent>
+      </Card>
 
       {/* Line Items */}
-      <section>
-        <h2 className="text-sm font-medium text-muted-foreground">Line Items</h2>
-        <Separator className="mt-2 mb-3" />
-        <LineItemsEditor
-          items={items}
-          taxRate={taxRate}
-          onChange={setItems}
-        />
-      </section>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-semibold tracking-tight">Line Items</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <LineItemsEditor
+            items={items}
+            taxRate={taxRate}
+            onChange={setItems}
+          />
+        </CardContent>
+      </Card>
     </form>
   );
 }

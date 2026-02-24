@@ -76,7 +76,7 @@ export function LineItemsEditor({
           </TableHeader>
           <TableBody>
             {items.map((item) => (
-              <TableRow key={item.id} className="group border-border hover:bg-muted/50">
+              <TableRow key={item.id} className="h-11 group border-border hover:bg-muted/50">
                 <TableCell className="py-1.5">
                   <Input
                     aria-label="Description"

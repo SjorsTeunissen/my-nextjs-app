@@ -27,11 +27,11 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
           return (
             <Fragment key={item.label}>
               <BreadcrumbItem>
-                {isLast ? (
+                {isLast || !item.href ? (
                   <BreadcrumbPage>{item.label}</BreadcrumbPage>
                 ) : (
                   <BreadcrumbLink asChild>
-                    <Link href={item.href!}>{item.label}</Link>
+                    <Link href={item.href}>{item.label}</Link>
                   </BreadcrumbLink>
                 )}
               </BreadcrumbItem>

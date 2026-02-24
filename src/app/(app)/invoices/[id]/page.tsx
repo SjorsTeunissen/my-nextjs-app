@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { InvoiceForm } from "@/components/invoice-form";
 import { PdfDownloadButtonWrapper } from "@/components/pdf-download-button-wrapper";
-import { PageHeader } from "@/components/page-header";
+import type { BreadcrumbItemData } from "@/components/breadcrumbs";
 
 export default async function EditInvoicePage({
   params,
@@ -35,26 +35,28 @@ export default async function EditInvoicePage({
 
   const defaultTaxRate = companySettings?.default_tax_rate ?? 21;
 
+  const breadcrumbs: BreadcrumbItemData[] = [
+    { label: "Invoices", href: "/invoices" },
+    { label: invoice.invoice_number },
+    { label: "Edit" },
+  ];
+
   return (
-    <div className="space-y-6">
-      {companySettings && (
-        <PageHeader
-          title="Invoice"
-          actions={
-            <PdfDownloadButtonWrapper
-              invoice={invoice}
-              lineItems={lineItems ?? []}
-              companySettings={companySettings}
-            />
-          }
-        />
-      )}
-      <InvoiceForm
-        invoice={invoice}
-        lineItems={lineItems ?? []}
-        defaultInvoiceNumber={invoice.invoice_number}
-        defaultTaxRate={defaultTaxRate}
-      />
-    </div>
+    <InvoiceForm
+      invoice={invoice}
+      lineItems={lineItems ?? []}
+      defaultInvoiceNumber={invoice.invoice_number}
+      defaultTaxRate={defaultTaxRate}
+      breadcrumbs={breadcrumbs}
+      extraActions={
+        companySettings && (
+          <PdfDownloadButtonWrapper
+            invoice={invoice}
+            lineItems={lineItems ?? []}
+            companySettings={companySettings}
+          />
+        )
+      }
+    />
   );
 }
