@@ -64,11 +64,11 @@ export function SidebarSearch() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="h-8 pl-8 text-xs"
+          className="h-8 pl-8 text-xs bg-[oklch(0.975_0.004_85)] dark:bg-[oklch(0.14_0.008_260)] border-input"
         />
       </div>
       {results.length > 0 && (
-        <ul className="mt-1 space-y-0.5">
+        <ul className="mt-1 space-y-0.5 rounded-md border border-border bg-popover p-1 shadow-[0_2px_8px_0_oklch(0_0_0/0.06)]">
           {results.map((result) => (
             <li key={result.id}>
               <button

@@ -39,7 +39,7 @@ export function CommandPalette() {
   }
 
   return (
-    <CommandDialog open={open} onOpenChange={setOpen}>
+    <CommandDialog open={open} onOpenChange={setOpen} className="bg-popover shadow-[0_4px_16px_0_oklch(0_0_0/0.08)]">
       <CommandInput placeholder="Search pages..." />
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>

@@ -51,7 +51,7 @@ export function KeyboardShortcutIndicator() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-popover shadow-[0_4px_16px_0_oklch(0_0_0/0.08)]">
         <DialogHeader>
           <DialogTitle>Keyboard Shortcuts</DialogTitle>
           <DialogDescription>
@@ -62,13 +62,13 @@ export function KeyboardShortcutIndicator() {
           {shortcutEntries.map((entry) => (
             <div
               key={entry.description}
-              className="flex items-center justify-between rounded-md border px-3 py-2"
+              className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-foreground"
             >
               <span className="text-sm">{entry.description}</span>
               <div className="flex gap-1">
                 {entry.keys.map((key, i) => (
                   <span key={i}>
-                    <kbd className="bg-muted text-muted-foreground rounded border px-1.5 py-0.5 text-xs font-mono">
+                    <kbd className="bg-muted text-foreground rounded border border-border px-1.5 py-0.5 text-xs font-mono">
                       {key}
                     </kbd>
                     {i < entry.keys.length - 1 && (
