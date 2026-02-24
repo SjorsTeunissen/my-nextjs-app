@@ -238,4 +238,72 @@ describe("InvoiceDetailPanel", () => {
 
     expect(onClose).toHaveBeenCalled();
   });
+
+  it("wraps detail panel sections in Card components", async () => {
+    const invoice = createInvoice({ notes: "Test note" });
+    mockGetInvoiceWithLineItems.mockResolvedValue({
+      invoice,
+      lineItems: [createLineItem()],
+    });
+
+    const { findByTestId } = render(
+      <InvoiceDetailPanel invoice={invoice} onClose={vi.fn()} />
+    );
+
+    const panel = await findByTestId("invoice-detail-panel");
+    const cards = panel.querySelectorAll('[data-slot="card"]');
+    expect(cards.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("uses Data typography (tabular-nums) for date values", async () => {
+    const invoice = createInvoice({
+      issue_date: "2026-01-15",
+      due_date: "2026-02-15",
+    });
+    mockGetInvoiceWithLineItems.mockResolvedValue({
+      invoice,
+      lineItems: [],
+    });
+
+    const { findByTestId } = render(
+      <InvoiceDetailPanel invoice={invoice} onClose={vi.fn()} />
+    );
+
+    const panel = await findByTestId("invoice-detail-panel");
+    const tabularElements = panel.querySelectorAll(".tabular-nums");
+    expect(tabularElements.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("uses Data typography (tabular-nums) for line item numeric cells", async () => {
+    const invoice = createInvoice();
+    mockGetInvoiceWithLineItems.mockResolvedValue({
+      invoice,
+      lineItems: [createLineItem({ quantity: 5, unit_price: 100, amount: 500 })],
+    });
+
+    const { findByTestId } = render(
+      <InvoiceDetailPanel invoice={invoice} onClose={vi.fn()} />
+    );
+
+    const panel = await findByTestId("invoice-detail-panel");
+    await waitFor(() => {
+      const tabularCells = panel.querySelectorAll("td.tabular-nums");
+      expect(tabularCells.length).toBeGreaterThanOrEqual(3);
+    });
+  });
+
+  it("uses Heading-label style for section titles", async () => {
+    const invoice = createInvoice();
+    mockGetInvoiceWithLineItems.mockResolvedValue({
+      invoice,
+      lineItems: [],
+    });
+
+    const { findByText } = render(
+      <InvoiceDetailPanel invoice={invoice} onClose={vi.fn()} />
+    );
+
+    const clientDetailsTitle = await findByText("Client Details");
+    expect(clientDetailsTitle).toHaveClass("uppercase", "tracking-wider");
+  });
 });

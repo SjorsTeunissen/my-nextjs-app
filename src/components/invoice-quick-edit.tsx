@@ -72,7 +72,7 @@ export function InvoiceQuickEdit({ invoice }: InvoiceQuickEditProps) {
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-80"
+        className="w-80 bg-popover border-border"
         align="start"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
@@ -82,7 +82,7 @@ export function InvoiceQuickEdit({ invoice }: InvoiceQuickEditProps) {
         }}
       >
         <div className="grid gap-3">
-          <h3 className="text-sm font-medium">Quick Edit</h3>
+          <h3 className="text-sm font-semibold tracking-tight">Quick Edit</h3>
           <div className="grid gap-2">
             <Label htmlFor={`client-${invoice.id}`}>Client Name</Label>
             <Input

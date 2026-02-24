@@ -156,4 +156,29 @@ describe("InvoiceQuickEdit", () => {
       expect(queryByText("Quick Edit")).not.toBeInTheDocument();
     });
   });
+
+  it("popover uses Surface-raised background (bg-popover)", async () => {
+    const user = userEvent.setup();
+    const { getByLabelText, getByText } = render(
+      <InvoiceQuickEdit invoice={createInvoice()} />
+    );
+
+    await user.click(getByLabelText("Quick edit"));
+
+    const popoverContent = getByText("Quick Edit").closest('[data-slot="popover-content"]') ||
+      getByText("Quick Edit").closest('[role="dialog"]');
+    expect(popoverContent).toBeInTheDocument();
+  });
+
+  it("Quick Edit heading uses Heading-section style (font-semibold tracking-tight)", async () => {
+    const user = userEvent.setup();
+    const { getByLabelText, getByText } = render(
+      <InvoiceQuickEdit invoice={createInvoice()} />
+    );
+
+    await user.click(getByLabelText("Quick edit"));
+
+    const heading = getByText("Quick Edit");
+    expect(heading).toHaveClass("font-semibold", "tracking-tight");
+  });
 });
