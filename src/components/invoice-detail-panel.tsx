@@ -21,7 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn, formatCurrency } from "@/lib/utils";
 import { getInvoiceWithLineItems } from "@/app/(app)/invoices/actions";
 import type { Database } from "@/lib/types/database";
@@ -85,7 +85,7 @@ export function InvoiceDetailPanel({
               <Card>
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm font-semibold tracking-tight">{invoice.client_name}</CardTitle>
+                    <h3 className="text-sm font-semibold tracking-tight">{invoice.client_name}</h3>
                     <Badge data-testid="invoice-total-badge" variant="secondary">
                       {invoice.total != null ? formatCurrency(invoice.total) : ""}
                     </Badge>
@@ -116,7 +116,7 @@ export function InvoiceDetailPanel({
               {/* Client Details */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-xs font-medium uppercase tracking-wider">Client Details</CardTitle>
+                  <h4 className="text-xs font-medium uppercase tracking-wider">Client Details</h4>
                 </CardHeader>
                 <CardContent>
                   <div className="text-sm text-muted-foreground space-y-1">
@@ -139,7 +139,7 @@ export function InvoiceDetailPanel({
               {lineItems.length > 0 && (
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-xs font-medium uppercase tracking-wider">Line Items</CardTitle>
+                    <h4 className="text-xs font-medium uppercase tracking-wider">Line Items</h4>
                   </CardHeader>
                   <CardContent>
                     <Table>
@@ -180,7 +180,7 @@ export function InvoiceDetailPanel({
               {invoice.notes && (
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-xs font-medium uppercase tracking-wider">Notes</CardTitle>
+                    <h4 className="text-xs font-medium uppercase tracking-wider">Notes</h4>
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-muted-foreground">
