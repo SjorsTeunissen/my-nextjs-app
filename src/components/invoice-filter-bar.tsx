@@ -1,10 +1,15 @@
 "use client";
 
 import { useCallback, useRef } from "react";
-import { X } from "lucide-react";
+import { X, User, Calendar, DollarSign } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 
 export interface InvoiceFilters {
   clientName: string;
@@ -63,6 +68,9 @@ export function InvoiceFilterBar({
     activeFilters.push({ key: "totalMax", label: `Max: ${filters.totalMax}` });
 
   const hasActiveFilters = activeFilters.length > 0;
+  const hasClientFilter = !!filters.clientName;
+  const hasDateFilter = !!filters.issueDateFrom || !!filters.issueDateTo;
+  const hasAmountFilter = !!filters.totalMin || !!filters.totalMax;
 
   function removeFilter(key: keyof InvoiceFilters) {
     onFiltersChange({ ...filters, [key]: "" });
@@ -80,49 +88,90 @@ export function InvoiceFilterBar({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap items-center gap-2">
-        <DebouncedInput
-          placeholder="Client name..."
-          value={filters.clientName}
-          onChange={(val) => onFiltersChange({ ...filters, clientName: val })}
-          className="w-48"
-        />
-        <Input
-          type="date"
-          aria-label="From date"
-          value={filters.issueDateFrom}
-          onChange={(e) =>
-            onFiltersChange({ ...filters, issueDateFrom: e.target.value })
-          }
-          className="w-40"
-        />
-        <Input
-          type="date"
-          aria-label="To date"
-          value={filters.issueDateTo}
-          onChange={(e) =>
-            onFiltersChange({ ...filters, issueDateTo: e.target.value })
-          }
-          className="w-40"
-        />
-        <Input
-          type="number"
-          placeholder="Min"
-          value={filters.totalMin}
-          onChange={(e) =>
-            onFiltersChange({ ...filters, totalMin: e.target.value })
-          }
-          className="w-24"
-        />
-        <Input
-          type="number"
-          placeholder="Max"
-          value={filters.totalMax}
-          onChange={(e) =>
-            onFiltersChange({ ...filters, totalMax: e.target.value })
-          }
-          className="w-24"
-        />
+      <div className="flex flex-wrap items-center gap-1.5">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="sm" className="gap-1.5">
+              <User className="size-3.5" />
+              Client
+              {hasClientFilter && (
+                <span className="size-1.5 rounded-full bg-primary" />
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-64 p-3">
+            <DebouncedInput
+              placeholder="Client name..."
+              value={filters.clientName}
+              onChange={(val) => onFiltersChange({ ...filters, clientName: val })}
+            />
+          </PopoverContent>
+        </Popover>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="sm" className="gap-1.5">
+              <Calendar className="size-3.5" />
+              Date
+              {hasDateFilter && (
+                <span className="size-1.5 rounded-full bg-primary" />
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-64 p-3">
+            <div className="flex flex-col gap-2">
+              <Input
+                type="date"
+                aria-label="From date"
+                value={filters.issueDateFrom}
+                onChange={(e) =>
+                  onFiltersChange({ ...filters, issueDateFrom: e.target.value })
+                }
+              />
+              <Input
+                type="date"
+                aria-label="To date"
+                value={filters.issueDateTo}
+                onChange={(e) =>
+                  onFiltersChange({ ...filters, issueDateTo: e.target.value })
+                }
+              />
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="sm" className="gap-1.5">
+              <DollarSign className="size-3.5" />
+              Amount
+              {hasAmountFilter && (
+                <span className="size-1.5 rounded-full bg-primary" />
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-64 p-3">
+            <div className="flex flex-col gap-2">
+              <Input
+                type="number"
+                placeholder="Min"
+                value={filters.totalMin}
+                onChange={(e) =>
+                  onFiltersChange({ ...filters, totalMin: e.target.value })
+                }
+              />
+              <Input
+                type="number"
+                placeholder="Max"
+                value={filters.totalMax}
+                onChange={(e) =>
+                  onFiltersChange({ ...filters, totalMax: e.target.value })
+                }
+              />
+            </div>
+          </PopoverContent>
+        </Popover>
+
         {hasActiveFilters && (
           <Button variant="ghost" size="sm" onClick={clearAll}>
             Clear all
@@ -132,7 +181,7 @@ export function InvoiceFilterBar({
       {hasActiveFilters && (
         <div className="flex flex-wrap gap-1">
           {activeFilters.map((filter) => (
-            <Badge key={filter.key} variant="secondary" className="gap-1">
+            <Badge key={filter.key} variant="secondary" className="gap-1 rounded-full">
               {filter.label}
               <button
                 type="button"

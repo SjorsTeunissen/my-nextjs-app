@@ -13,6 +13,9 @@ export function InvoiceTableSkeleton() {
     <Table>
       <TableHeader>
         <TableRow>
+          <TableHead className="w-10">
+            <Skeleton className="size-4 rounded animate-pulse" />
+          </TableHead>
           <TableHead className="w-[120px]">
             <Skeleton className="h-4 w-20 animate-pulse" />
           </TableHead>
@@ -34,6 +37,9 @@ export function InvoiceTableSkeleton() {
       <TableBody>
         {Array.from({ length: 5 }).map((_, i) => (
           <TableRow key={i}>
+            <TableCell>
+              <Skeleton className="size-4 rounded animate-pulse" />
+            </TableCell>
             <TableCell>
               <Skeleton className="h-4 w-16 animate-pulse" />
             </TableCell>

@@ -1,102 +1,124 @@
-# PLAN: SER-45 -- Restyle App Shell & Navigation Sidebar
+# PLAN: SER-48 -- Restyle Invoice Filter Bar, Table & Skeletons
 
-## Approach
+## Summary
+Redesign the invoice list page with compact filter triggers, 44px ledger-line table rows, warm hover states, empty state with CTA, matching skeleton loading, and toast notifications for bulk delete actions.
 
-Extract shared nav configuration to `src/lib/nav-config.ts`, then restyle `app-shell.tsx`, `nav-sidebar.tsx`, and `mobile-sidebar.tsx` to use Ink & Ledger tokens (canvas background, border-r separation, warm hover states, Body typography). Update both test files.
+## Scope Files (MUST modify)
+- `src/app/(app)/invoices/page.tsx`
+- `src/app/(app)/invoices/invoices-client.tsx`
+- `src/components/invoice-filter-bar.tsx`
+- `src/components/invoice-table.tsx`
+- `src/components/invoice-table-skeleton.tsx`
+- `src/app/(app)/invoices/loading.tsx`
+- `src/__tests__/invoice-filter-bar.test.tsx`
+- `src/__tests__/invoice-table.test.tsx`
 
-## File Changes
+## MUST NOT modify
+- `src/components/invoice-detail-panel.tsx` (SER-52)
+- `src/components/invoice-quick-edit.tsx` (SER-52)
+- `src/components/invoice-form.tsx` (SER-49)
+- `src/app/(app)/invoices/new/page.tsx` (SER-49)
+- `src/app/(app)/invoices/[id]/page.tsx` (SER-49)
 
-### 1. CREATE: src/lib/nav-config.ts
-**Reference:** src/components/nav-sidebar.tsx:23-37
-```tsx
-// Current inline nav section definition in nav-sidebar.tsx
-interface NavSection {
-  label: string;
-  items: { href: string; label: string; icon: React.ComponentType<{ className?: string }> }[];
-}
+## Implementation Steps
 
-const navSections: NavSection[] = [
-  {
-    label: "Main",
-    items: [{ href: "/invoices", label: "Invoices", icon: FileText }],
-  },
-  {
-    label: "Settings",
-    items: [{ href: "/settings", label: "Settings", icon: Settings }],
-  },
-];
-```
-**Action:** Create a new module exporting the `NavSection` type and `navSections` array. Move icon imports (`FileText`, `Settings`) here. Both `NavSidebar` and `MobileSidebar` will import from this module.
+### Step 1: Restyle `src/components/invoice-filter-bar.tsx`
+**Current:** Five inline Input fields (DebouncedInput for client name, 2x date, 2x number) + active filter badges below.
+**Target:** Compact ghost-button triggers that open popovers for each filter group. Active filters shown as removable pill badges with x button.
 
-### 2. MODIFY: src/components/app-shell.tsx
-**Pattern source:** .interface-design/system.md:148-153
-```
-App Shell
-- Full viewport height (h-dvh), no scrolling on shell itself
-- Resizable sidebar (already exists via react-resizable-panels)
-- Sidebar: same background as canvas, separated by border only
-- Content area: overflow-auto on content, not the shell
-- Mobile: sheet-based sidebar trigger
-```
-**Action:**
-- Add `h-dvh` to the `ResizablePanelGroup` className (full viewport height)
-- Add `border-r border-border` to the sidebar `ResizablePanel` so it has a visible right border
-- Add `overflow-auto` to the content `ResizablePanel`
-- Keep all panel IDs unchanged (`sidebar`, `content`) to preserve localStorage persistence
-- Keep all existing resize/collapse logic unchanged
+Changes:
+1. Replace five inline Input fields with three compact ghost buttons:
+   - "Client" button -> opens Popover with DebouncedInput for client name search
+   - "Date" button -> opens Popover with From/To date inputs
+   - "Amount" button -> opens Popover with Min/Max number inputs
+2. Active buttons get a visual indicator (dot or count) when their filter is active
+3. Active filters displayed below as pill badges with `rounded-full` styling and X dismiss button
+4. Keep "Clear all" ghost button when filters are active
+5. Use existing `Popover`, `PopoverTrigger`, `PopoverContent` from `@/components/ui/popover`
+6. Keep `DebouncedInput` internal component unchanged (used for client name)
+7. Import `User`, `Calendar`, `DollarSign` icons from lucide-react for button labels
 
-### 3. MODIFY: src/components/nav-sidebar.tsx
-**Pattern source:** .interface-design/system.md:86-102 (Typography)
-```
-Body: text-sm font-normal  /* 14px -- default text */
-Heading-section: text-sm font-semibold tracking-tight  /* 14px */
-```
-**Pattern source:** .interface-design/system.md:21 (Sidebar)
-```
-Sidebar: oklch(0.985 0.005 85)  /* same as canvas -- border-separated, not color-separated */
-```
-**Action:**
-- Remove the inline `navSections` array and `NavSection` interface; import both from `@/lib/nav-config`
-- Remove unused icon imports (`FileText`, `Settings`) that were only used for nav config
-- Change aside `className` from `bg-sidebar text-sidebar-foreground` to `bg-background text-foreground` (canvas background)
-- Change nav item links: replace `hover:bg-sidebar-accent hover:text-sidebar-accent-foreground` with `hover:bg-accent/60 hover:text-accent-foreground` (warm surface shift)
-- Change active nav item: replace `bg-sidebar-accent text-sidebar-accent-foreground` with `bg-accent text-accent-foreground`
-- Apply Body typography (`text-sm font-normal`) to nav item links (replace `text-sm font-medium`)
-- Polish workspace header: use `text-sm font-semibold tracking-tight` for company name (Heading-section)
-- Keep all existing functionality: collapse, theme toggle, search, section toggle, signout
+### Step 2: Restyle `src/components/invoice-table.tsx`
+**Current:** Table with shadow+translate hover, basic empty state (no CTA), no toast on bulk delete.
+**Target:** Warm surface-shift hover, empty state with CTA button, toast on bulk actions.
 
-### 4. MODIFY: src/components/mobile-sidebar.tsx
-**Reference:** src/components/nav-sidebar.tsx (after restyling)
-**Action:**
-- Remove inline `navItems` array and icon imports (`FileText`, `Settings`)
-- Import `navSections` from `@/lib/nav-config`
-- Flatten sections into nav items for rendering (iterate `navSections.flatMap(s => s.items)`)
-- Apply same Ink & Ledger nav item styling as desktop: `hover:bg-accent/60 hover:text-accent-foreground`, Body typography (`text-sm font-normal`)
-- Change active state: `bg-accent text-accent-foreground`
-- Update SheetContent: add `bg-background` for canvas background consistency
+Changes:
+1. Replace row hover classes: remove `hover:shadow-sm hover:-translate-y-px` etc. -- let the base TableRow `hover:bg-muted/50` handle it. Keep `group/row cursor-pointer` and `transition-colors duration-150`.
+2. Empty state: add a "Create Invoice" primary CTA `<Button asChild><Link href="/invoices/new">` below the existing text
+3. Import `toast` from `sonner` and add toast notifications in `handleBulkDelete`:
+   - On success: `toast.success(\`${count} invoice${count === 1 ? "" : "s"} deleted\`)`
+   - On error: `toast.error("Failed to delete invoices")`
+4. Bulk action bar: minor styling refinement with `rounded-sm` and consistent spacing
+5. All @tanstack/react-table logic, columns, sorting, selection, CSV export remain unchanged
 
-### 5. MODIFY: src/__tests__/nav-sidebar-theme.test.tsx
-**Reference:** Current test file at src/__tests__/nav-sidebar-theme.test.tsx
-**Concrete test cases:**
-1. "renders nav-sidebar with canvas background (bg-background)" -- check aside element has `bg-background` class
-2. "renders nav items with Body typography (text-sm font-normal)" -- check nav links have correct classes
-3. "displays company name with Heading-section typography" -- check workspace header h1 classes
-4. Existing tests remain: theme toggle, collapse, section headers, section collapse, logoUrl
+### Step 3: Restyle `src/components/invoice-table-skeleton.tsx`
+**Current:** 6 columns of skeleton cells, no checkbox column, generic widths.
+**Target:** Match restyled table layout with checkbox column and correct proportions.
 
-### 6. MODIFY: src/__tests__/mobile-sidebar.test.tsx
-**Reference:** Current test file at src/__tests__/mobile-sidebar.test.tsx
-**Concrete test cases:**
-1. "renders nav items from shared nav-config" -- verify items from `navSections` appear
-2. "applies canvas background to sheet content" -- check SheetContent has `bg-background`
-3. Existing tests remain: hamburger button, opens sheet, nav links, user email
+Changes:
+1. Add a checkbox column skeleton (small 4x4 rounded square) as first column
+2. Adjust skeleton widths to better match actual data column proportions
+3. Rows already render at 44px via base TableRow h-11
+4. Keep 5-row skeleton count
 
-## Reusable Utilities
-- `cn` from `src/lib/utils.ts:4` -- conditional class merging, used throughout
-- `useKeyboardShortcuts` from `src/hooks/use-keyboard-shortcuts.ts:36` -- already in nav-sidebar, no changes needed
+### Step 4: Update `src/app/(app)/invoices/loading.tsx`
+**Current:** PageHeader skeleton + InvoiceTableSkeleton.
+**Target:** Add filter bar skeleton placeholders between header and table.
 
-## Out of Scope
-- DO NOT modify `src/app/(app)/layout.tsx` (belongs to SER-46)
-- DO NOT modify `src/components/page-header.tsx` (belongs to SER-46)
-- DO NOT modify `src/app/globals.css` (already styled by SER-43)
-- DO NOT modify `src/components/sidebar-search.tsx` (reference only)
-- DO NOT change ResizablePanelGroup panel IDs (would break localStorage persistence)
+Changes:
+1. Add filter bar skeleton: row of 3 small rounded skeleton rectangles (matching the 3 ghost button triggers) between header skeleton and table skeleton
+2. Keep existing PageHeader skeleton structure
+3. Keep InvoiceTableSkeleton reference
+
+### Step 5: Update `src/app/(app)/invoices/invoices-client.tsx`
+**Current:** Wrapper with filter bar + table + detail panel in `flex flex-col gap-4`.
+**Target:** Minimal changes -- ensure layout composes correctly with new compact filter bar.
+
+Changes:
+1. Adjust gap spacing if needed (gap-3 instead of gap-4 for tighter composition)
+2. No functional changes
+
+### Step 6: Update `src/app/(app)/invoices/page.tsx`
+**Current:** PageHeader + InvoicesClient.
+**Target:** No structural changes needed.
+
+Changes:
+1. No changes required -- existing structure works with restyled child components
+
+### Step 7: Update test files
+
+#### `src/__tests__/invoice-filter-bar.test.tsx`
+1. Update debounce test: click "Client" button to open popover, then find input inside popover and type
+2. Update date range test: click "Date" button to open popover, find date inputs inside
+3. Update amount range test: click "Amount" button to open popover, find number inputs inside
+4. Keep active filter badge tests (badge rendering, remove filter, clear all -- same behavior)
+
+#### `src/__tests__/invoice-table.test.tsx`
+1. Update empty state test: verify "Create Invoice" CTA link exists alongside text
+2. Add test: "shows toast.success on bulk delete success"
+3. Add test: "shows toast.error on bulk delete error"
+4. Keep all existing sorting, selection, CSV export, hover-action tests unchanged
+
+## Design Token Application
+- Ghost buttons: `variant="ghost" size="sm"` with lucide icons
+- Popovers: existing PopoverContent with `bg-popover` + shadow + border (Elevation-2)
+- Filter pills: `rounded-full` Badge variant with X button (Radius-full per system.md)
+- Table row hover: warm surface shift via base TableRow `hover:bg-muted/50`
+- Empty state: centered with muted FileText icon + descriptive text + primary CTA button
+- Toast: `sonner` `toast.success()` / `toast.error()` -- Toaster already in root layout
+
+## Dependencies
+- `sonner` -- already installed, `<Toaster />` already in root layout
+- `@/components/ui/popover` -- already exists
+- `@/components/ui/badge` -- already exists with pill-friendly variants
+- No new packages or components needed
+
+## Validation
+- `npx vitest run` -- all tests pass
+- Filter bar renders as 3 compact ghost buttons
+- Popovers open on button click with correct filter inputs inside
+- Active filters shown as removable pill badges below
+- Table rows at 44px with warm hover (surface shift)
+- Empty state shows icon + text + "Create Invoice" CTA
+- Skeleton matches restyled page layout with filter bar placeholders
+- Bulk delete shows success/error toast
